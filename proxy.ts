@@ -26,6 +26,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(SIGN_IN_PATH, request.url));
   }
 
+  
+
   try {
     const user = await verifyToken(token);
 

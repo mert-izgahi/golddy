@@ -2,7 +2,7 @@
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 import prisma from './lib/prisma'
-
+import { hashPassword } from './lib/hash-password'
 // Helper function to get random item from array
 function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
@@ -38,7 +38,8 @@ async function main() {
   // --------------------------------------------------------
   console.log('🏪 Creating stores...')
   
-  const hashedPassword = await bcrypt.hash('password123', 10)
+  //  Common hashed password for all users: "password123"
+  const hashedPassword = await hashPassword('password123')
   
   const stores = await Promise.all([
     prisma.store.create({

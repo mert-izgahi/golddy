@@ -1,10 +1,11 @@
-import { authMiddleware } from '@/lib/auth-middlewares';
+
 import { ContextUser } from '@/lib/types';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { handle } from 'hono/vercel'
-
+// routes
+import { authRoutes } from '@/routes/auth.routes';
 
 declare module "hono" {
     interface ContextVariableMap {
@@ -15,11 +16,52 @@ declare module "hono" {
 const app = new Hono().basePath('/api');
 app.use('*', logger())
 app.use('*', cors())
-app.get('/health',authMiddleware, (c) => {
+app.get('/health', (c) => {
     return c.json({
         message: 'OK',
     })
 })
 
-export const GET = handle(app)
-export const POST = handle(app)
+app.route('/auth', authRoutes);
+
+
+// Not found
+app.notFound((c) =>
+    c.json(
+        {
+            success: false,
+            message: "Not found",
+            result: {
+                message: "Not found",
+                time: new Date().toISOString(),
+            },
+        },
+        404
+    )
+);
+
+// Error
+app.onError((err, c) => {
+    console.error(err);
+    return c.json(
+        {
+            success: false,
+            message: "Internal server error",
+            result: {
+                message: "An unexpected error occurred",
+                time: new Date().toISOString(),
+            },
+        },
+        500
+    );
+});
+
+
+
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const DELETE = handle(app);
+export const PATCH = handle(app);
+export const HEAD = handle(app);
+export const OPTIONS = handle(app);

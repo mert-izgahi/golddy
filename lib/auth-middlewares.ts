@@ -39,3 +39,4 @@ export const getAuthUser = (c: Context): ContextUser | null => {
     const user = c.get("user") as ContextUser | null;
     return user;
 }
+
