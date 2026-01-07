@@ -1,8 +1,8 @@
-import React from 'react'
+import SignInPage from "./client"
 
 function page() {
     return (
-        <div>SignInPage</div>
+        <SignInPage />
     )
 }
 

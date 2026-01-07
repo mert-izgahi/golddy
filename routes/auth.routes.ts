@@ -1,14 +1,15 @@
 import { Hono } from "hono";
-import { z } from "zod";
 import { hashPassword, comparePassword } from "@/lib/hash-password";
 import { generateToken } from "@/lib/jwt";
 import prisma from "@/lib/prisma";
-import { Role } from "@/lib/generated/prisma";
 import { authenticate } from "@/lib/auth-middlewares";
-import { signInSchema, type SignInInput } from "@/lib/zod";
+import { getSignInSchema } from "@/lib/zod";
 import { zValidator } from "@hono/zod-validator";
 import { ContextUser } from "@/lib/types";
+
+
 export const authRoutes = new Hono();
+const signInSchema = getSignInSchema("en");
 
 authRoutes
     // @desc    Sign in user and return JWT token
