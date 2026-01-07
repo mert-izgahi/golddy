@@ -1,0 +1,22 @@
+📝 Test Credentials:
+-------------------
+Admin Account:
+  Email:    admin@system.com
+  Password: password123
+
+Store Accounts:
+  Golden Palace Jewelry
+    Email:    golden.palace@jewelry.com
+    Password: password123
+  Royal Gold Shop
+    Email:    royal.gold@shop.com
+    Password: password123
+  Diamond Crown Jewelry
+    Email:    diamond.crown@jewelry.com
+    Password: password123
+  Silver Moon Shop
+    Email:    silver.moon@shop.com
+    Password: password123
+  Luxury Gems Jewelry
+    Email:    luxury.gems@jewelry.com
+    Password: password123
