@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken } from "@/lib/jwt";
+import { extractToken, verifyToken } from "@/lib/jwt";
 
 const AUTH_PREFIX = "/auth";
 const SIGN_IN_PATH = "/auth/sign-in";
@@ -8,8 +8,13 @@ const PUBLIC_PATHS = ["/api/health", "/api/auth/sign-in"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log("Middeware started ...");
-  const token = request.cookies.get("token")?.value;
+
+  const token = extractToken(
+    request.headers.get("Authorization"),
+    request.cookies.get("token")?.value || null
+  );
+  console.log(`Provided token: ${token}`);
+  
   // Allow public or unauthenticated routes
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
@@ -26,8 +31,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(SIGN_IN_PATH, request.url));
   }
 
-  
-
+  // Verify token
   try {
     const user = await verifyToken(token);
 
@@ -37,7 +41,7 @@ export async function proxy(request: NextRequest) {
       response.cookies.delete("token");
       return response;
     }
-
+    
     // If accessing /auth while already authenticated → redirect home
     if (pathname.startsWith(AUTH_PREFIX)) {
       return NextResponse.redirect(new URL("/", request.url));

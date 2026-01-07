@@ -44,6 +44,10 @@ authRoutes
 
         const token = await generateToken({ id: user.id, email: user.email, role: user.role });
 
+
+        // Set token in HttpOnly cookie
+        c.header("Set-Cookie", `token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Strict; Secure`);
+        
         return c.json({ message: "Sign-in successful", result: { token }, success: true });
     })
 

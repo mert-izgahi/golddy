@@ -9,10 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { PasswordInput } from '@/components/inputs/password-input';
+import { useSignInMutation } from '@/hooks/use-auth';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 function SignInPage() {
     const { lang } = useLang();
     const signInSchema = getSignInSchema(lang);
+    const { mutate, isPending } = useSignInMutation();
+
+    const router = useRouter();
     const form = useForm<SignInInput>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -21,8 +28,18 @@ function SignInPage() {
         },
     });
 
-    const onSubmit = (data: SignInInput) => {
-        console.log(data);
+    const onSubmit = async (data: SignInInput) => {
+        await mutate(data, {
+            onSuccess: () => {
+                form.reset();
+                toast.success(lang === 'en' ? 'Signed in successfully!' : 'تم تسجيل الدخول بنجاح!');
+                router.refresh();
+            },
+            onError: (error) => {
+                console.error("Sign-in error:", error);
+                toast.error(lang === 'en' ? 'Sign-in failed. Please check your credentials.' : 'فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.');
+            },
+        });
     };
 
 
@@ -57,6 +74,9 @@ function SignInPage() {
                         )}
                     />
                     <Button type="submit" variant="brand" className="w-full cursor-pointer">
+                        {
+                            isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        }
                         {lang === 'en' ? 'Sign In' : 'تسجيل الدخول'}
                     </Button>
                 </form>
