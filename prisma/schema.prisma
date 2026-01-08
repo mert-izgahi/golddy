@@ -22,12 +22,11 @@ model User {
   password  String
   name      String?
   role      Role     @default(STORE)
+  phoneNumber String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   // Relations
-  store   Store?  @relation(fields: [storeId], references: [id])
-  storeId String?
+  stores Store[]
 }
 
 // --------------------------------------------------------
@@ -35,11 +34,7 @@ model User {
 // --------------------------------------------------------
 model Store {
   id       String @id @default(cuid())
-  email    String @unique
-  password String
-
-  storeName            String      @unique
-  managerName          String
+  name            String      @unique
   address              String?
   city                 String?
   logoUrl              String?
@@ -50,7 +45,8 @@ model Store {
   updatedAt            DateTime    @updatedAt
 
   // Relations
-  users     User[]
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String
   sales     Sale[]
   stocks    Stock[]
   exchanges Exchange[]
@@ -64,6 +60,7 @@ model Store {
 model Sale {
   id           String       @id @default(cuid())
   createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   date         DateTime     @default(now())
   weight       Float
   goldType     GoldType // 14, 18, 21, 24

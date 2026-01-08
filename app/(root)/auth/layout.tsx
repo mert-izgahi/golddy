@@ -1,12 +1,12 @@
 "use client";
 import LangSwitcher from '@/components/shared/lang-switcher'
 import Logo from '@/components/shared/logo'
-import { useLang } from '@/hooks/use-lang';
+import { useLangStore } from '@/store/lang-store';
 import { PropsWithChildren } from 'react'
 
 function layout({ children }: PropsWithChildren) {
 
-    const { lang } = useLang();
+    const { lang } = useLangStore();
     const welcomeMessage = lang === 'en' ? "Welcome to Gold Store Management System" : "مرحباً بك في نظام إدارة متجر الذهب";
     const subtitle = lang === 'en' ? "Please log in to continue." : "يرجى تسجيل الدخول للمتابعة.";
     const contactInfo = lang === 'en' ? "For assistance, contact support@example.com" : "للحصول على المساعدة، اتصل بـ support@example.com";

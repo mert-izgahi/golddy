@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { useLang } from "@/hooks/use-lang";
 import { cn } from "@/lib/utils";
+import { useLangStore } from "@/store/lang-store";
 
 interface PasswordInputProps extends React.ComponentProps<"input"> { }
 
 
 function PasswordInput({ value, onChange, ...props }: PasswordInputProps) {
     const [showPassword, setShowPassword] = useState(false);
-    const { lang } = useLang();
+    const { lang } = useLangStore();
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };

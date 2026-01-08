@@ -1,5 +1,6 @@
 "use client";
-import { useLang } from "@/hooks/use-lang"
+
+import { useLangStore } from "@/store/lang-store";
 import { Store as StoreIcon } from "lucide-react"
 import Link from "next/link"
 
@@ -9,7 +10,7 @@ interface LogoProps {
 }
 
 function Logo({ size = 20 }: LogoProps) {
-    const { lang } = useLang();
+    const { lang } = useLangStore();
     const label = lang === "en" ? "Gold Store" : "متجر الذهب"
     return (
         <Link href={"/"} className="flex items-center gap-2">

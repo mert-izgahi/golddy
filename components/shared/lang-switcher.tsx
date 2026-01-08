@@ -1,10 +1,11 @@
 "use client"
-import { useLang } from '@/hooks/use-lang'
+
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { Globe2 } from 'lucide-react'
+import { useLangStore } from '@/store/lang-store'
 function LangSwitcher() {
-    const { lang, setLang } = useLang()
+    const { lang, setLang } = useLangStore()
 
     return (
         <DropdownMenu>

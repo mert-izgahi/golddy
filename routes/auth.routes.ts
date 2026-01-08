@@ -32,7 +32,7 @@ authRoutes
 
 
         const user = await prisma.user.findUnique({ where: { email } });
-        
+
         if (!user) {
             return c.json({ message: "Invalid email or password", result: null, success: false }, 401);
         }
@@ -47,7 +47,7 @@ authRoutes
 
         // Set token in HttpOnly cookie
         c.header("Set-Cookie", `token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Strict; Secure`);
-        
+
         return c.json({ message: "Sign-in successful", result: { token }, success: true });
     })
 
@@ -80,6 +80,7 @@ authRoutes
                 email: true,
                 role: true,
                 name: true,
+                stores: true,
                 createdAt: true,
                 updatedAt: true,
             },
@@ -91,7 +92,7 @@ authRoutes
 
         return c.json({ message: "User fetched successfully", result: dbUser, success: true });
     })
-    
+
 
     // @desc    Update authenticated user info
     // @route   PUT /auth/me

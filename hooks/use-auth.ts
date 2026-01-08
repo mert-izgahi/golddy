@@ -14,3 +14,14 @@ export const useSignInMutation = () => {
         },
     });
 };
+
+
+export const useSignOutMutation = () => {
+    return useMutation<void>({
+        mutationKey: ["sign-out"],
+        mutationFn: async () => {
+            const response = await apiClient.post("/auth/sign-out");
+            return response.data;
+        },
+    });
+};

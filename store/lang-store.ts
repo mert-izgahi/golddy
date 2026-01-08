@@ -2,12 +2,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-interface LangState {
+interface LangStore {
     lang: "en" | "ar";
     setLang: (lang: "en" | "ar") => void;
 }
 
-export const useLang = create<LangState>()(
+export const useLangStore = create<LangStore>()(
     persist(
         (set) => ({
             lang: "ar",

@@ -2,7 +2,6 @@
 
 import { getSignInSchema } from '@/lib/zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLang } from '@/hooks/use-lang';
 import { useForm } from 'react-hook-form';
 import { SignInInput } from '@/lib/zod';
 import { Input } from '@/components/ui/input';
@@ -13,9 +12,10 @@ import { useSignInMutation } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLangStore } from '@/store/lang-store';
 
 function SignInPage() {
-    const { lang } = useLang();
+    const { lang } = useLangStore();
     const signInSchema = getSignInSchema(lang);
     const { mutate, isPending } = useSignInMutation();
 

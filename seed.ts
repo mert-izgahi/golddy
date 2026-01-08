@@ -25,121 +25,152 @@ async function main() {
 
   // Clear existing data
   console.log('🧹 Cleaning existing data...')
+  await prisma.store.deleteMany()
+  await prisma.user.deleteMany()
   await prisma.sale.deleteMany()
   await prisma.stock.deleteMany()
   await prisma.exchange.deleteMany()
   await prisma.report.deleteMany()
-  await prisma.user.deleteMany()
-  await prisma.store.deleteMany()
+  
   console.log('✅ Existing data cleaned\n')
 
   // --------------------------------------------------------
-  // 1. CREATE STORES
+  // 1. CREATE USERS
   // --------------------------------------------------------
-  console.log('🏪 Creating stores...')
-  
+  console.log('👥 Creating users...')
+
   //  Common hashed password for all users: "password123"
   const hashedPassword = await hashPassword('password123')
-  
-  const stores = await Promise.all([
-    prisma.store.create({
+
+  // Create store owner users first
+  const storeOwners = await Promise.all([
+    prisma.user.create({
       data: {
         email: 'golden.palace@jewelry.com',
         password: hashedPassword,
-        storeName: 'Golden Palace Jewelry',
-        managerName: faker.person.fullName(),
-        address: faker.location.streetAddress(),
-        city: faker.location.city(),
-        logoUrl: faker.image.url(),
-        primaryPhoneNumber: faker.phone.number(),
-        secondaryPhoneNumber: faker.phone.number(),
-        status: 'ACTIVE',
+        name: 'Golden Palace Owner',
+        role: 'STORE',
       },
     }),
-    prisma.store.create({
+    prisma.user.create({
       data: {
         email: 'royal.gold@shop.com',
         password: hashedPassword,
-        storeName: 'Royal Gold Shop',
-        managerName: faker.person.fullName(),
+        name: 'Royal Gold Owner',
+        role: 'STORE',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'diamond.crown@jewelry.com',
+        password: hashedPassword,
+        name: 'Diamond Crown Owner',
+        role: 'STORE',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'silver.moon@shop.com',
+        password: hashedPassword,
+        name: 'Silver Moon Owner',
+        role: 'STORE',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'luxury.gems@jewelry.com',
+        password: hashedPassword,
+        name: 'Luxury Gems Owner',
+        role: 'STORE',
+      },
+    }),
+  ])
+
+  // Create admin user
+  const adminUser = await prisma.user.create({
+    data: {
+      email: 'admin@system.com',
+      password: hashedPassword,
+      name: 'System Administrator',
+      role: 'ADMIN',
+    },
+  })
+
+  console.log(`✅ Created ${storeOwners.length + 1} users\n`)
+
+  // --------------------------------------------------------
+  // 2. CREATE STORES
+  // --------------------------------------------------------
+  console.log('🏪 Creating stores...')
+
+  const stores = await Promise.all([
+    prisma.store.create({
+      data: {
+        name: 'Golden Palace Jewelry',
         address: faker.location.streetAddress(),
         city: faker.location.city(),
         logoUrl: faker.image.url(),
         primaryPhoneNumber: faker.phone.number(),
         secondaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
+        ownerId: storeOwners[0].id,
       },
     }),
     prisma.store.create({
       data: {
-        email: 'diamond.crown@jewelry.com',
-        password: hashedPassword,
-        storeName: 'Diamond Crown Jewelry',
-        managerName: faker.person.fullName(),
+        name: 'Royal Gold Shop',
+        address: faker.location.streetAddress(),
+        city: faker.location.city(),
+        logoUrl: faker.image.url(),
+        primaryPhoneNumber: faker.phone.number(),
+        secondaryPhoneNumber: faker.phone.number(),
+        status: 'ACTIVE',
+        ownerId: storeOwners[1].id,
+      },
+    }),
+    prisma.store.create({
+      data: {
+        name: 'Diamond Crown Jewelry',
         address: faker.location.streetAddress(),
         city: faker.location.city(),
         logoUrl: faker.image.url(),
         primaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
+        ownerId: storeOwners[2].id,
       },
     }),
     prisma.store.create({
       data: {
-        email: 'silver.moon@shop.com',
-        password: hashedPassword,
-        storeName: 'Silver Moon Shop',
-        managerName: faker.person.fullName(),
+        name: 'Silver Moon Shop',
         address: faker.location.streetAddress(),
         city: faker.location.city(),
         primaryPhoneNumber: faker.phone.number(),
         status: 'SUSPEND',
+        ownerId: storeOwners[3].id,
       },
     }),
     prisma.store.create({
       data: {
-        email: 'luxury.gems@jewelry.com',
-        password: hashedPassword,
-        storeName: 'Luxury Gems Jewelry',
-        managerName: faker.person.fullName(),
+        name: 'Luxury Gems Jewelry',
         address: faker.location.streetAddress(),
         city: faker.location.city(),
         logoUrl: faker.image.url(),
         primaryPhoneNumber: faker.phone.number(),
         secondaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
+        ownerId: storeOwners[4].id,
       },
     }),
   ])
-  
+
   console.log(`✅ Created ${stores.length} stores\n`)
 
   // --------------------------------------------------------
-  // 2. CREATE USERS
+  // 3. CREATE ADDITIONAL STORE USERS
   // --------------------------------------------------------
-  console.log('👥 Creating users...')
-  
-  const users = await Promise.all([
-    // Admin user
-    prisma.user.create({
-      data: {
-        email: 'admin@system.com',
-        password: hashedPassword,
-        name: 'System Administrator',
-        role: 'ADMIN',
-      },
-    }),
-    // Store users
-    ...stores.slice(0, 3).map((store) =>
-      prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          password: hashedPassword,
-          name: faker.person.fullName(),
-          role: 'STORE',
-          storeId: store.id,
-        },
-      })
-    ),
+  console.log('👥 Creating additional store users...')
+
+  const additionalUsers = await Promise.all([
     // Additional users for first store
     prisma.user.create({
       data: {
@@ -147,7 +178,6 @@ async function main() {
         password: hashedPassword,
         name: faker.person.fullName(),
         role: 'STORE',
-        storeId: stores[0].id,
       },
     }),
     prisma.user.create({
@@ -156,12 +186,20 @@ async function main() {
         password: hashedPassword,
         name: faker.person.fullName(),
         role: 'STORE',
-        storeId: stores[0].id,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: faker.internet.email(),
+        password: hashedPassword,
+        name: faker.person.fullName(),
+        role: 'STORE',
       },
     }),
   ])
-  
-  console.log(`✅ Created ${users.length} users (1 admin, ${users.length - 1} store users)\n`)
+
+  const allUsers = [...storeOwners, adminUser, ...additionalUsers]
+  console.log(`✅ Created ${allUsers.length} total users (${storeOwners.length} store owners, 1 admin, ${additionalUsers.length} additional users)\n`)
 
   // --------------------------------------------------------
   // 3. CREATE REPORTS WITH TRANSACTIONS
@@ -174,7 +212,7 @@ async function main() {
     'GOLD_21',
     'GOLD_24',
   ]
-  
+
   const currencies: Array<'USD' | 'SYP'> = ['USD', 'SYP']
   const paymentTypes: Array<'CASH' | 'TRANSFER' | 'OTHER'> = ['CASH', 'TRANSFER', 'OTHER']
 
@@ -185,11 +223,11 @@ async function main() {
 
   // Create reports for each active store for the last 30 days
   for (const store of stores.filter(s => s.status === 'ACTIVE')) {
-    console.log(`  📈 Processing store: ${store.storeName}`)
-    
+    console.log(`  📈 Processing store: ${store.name}`)
+
     for (let daysAgo = 29; daysAgo >= 0; daysAgo--) {
       const reportDate = pastDate(daysAgo)
-      
+
       // Gold prices (fluctuate slightly)
       const goldPrice14 = randomFloat(50, 60)
       const goldPrice18 = randomFloat(65, 75)
@@ -235,7 +273,7 @@ async function main() {
       for (let i = 0; i < numSales; i++) {
         const goldType = randomItem(goldTypes)
         const weight = randomFloat(5, 50, 2)
-        
+
         // Price per gram based on gold type
         let pricePerGram: number
         switch (goldType) {
@@ -327,18 +365,18 @@ async function main() {
 
       // Calculate totals for closed reports
       if (daysAgo !== 0) {
-        const totalGoldSold = sales.reduce((sum, sale) => sum + sale.weight, 0)
+        const totalGoldSold = sales.reduce((sum: number, sale: any) => sum + sale.weight, 0)
         const totalSalesUSD = sales
-          .filter(s => s.currency === 'USD')
-          .reduce((sum, sale) => sum + sale.total, 0)
+          .filter((s: any) => s.currency === 'USD')
+          .reduce((sum: number, sale: any) => sum + sale.total, 0)
         const totalSalesSYP = sales
-          .filter(s => s.currency === 'SYP')
-          .reduce((sum, sale) => sum + sale.total, 0)
+          .filter((s: any) => s.currency === 'SYP')
+          .reduce((sum: number, sale: any) => sum + sale.total, 0)
 
         // Calculate closing balances (simplified)
         const closingUSD = openingUSD + totalSalesUSD + randomFloat(-500, 500)
         const closingSYP = openingSYP + totalSalesSYP + randomFloat(-10000, 10000)
-        
+
         // Gold sold reduces closing
         const closingGold14 = openingGold14 - randomFloat(10, 50)
         const closingGold18 = openingGold18 - randomFloat(10, 50)
@@ -382,7 +420,7 @@ async function main() {
   console.log('📊 DATABASE SEED SUMMARY')
   console.log('========================')
   console.log(`Stores:     ${stores.length}`)
-  console.log(`Users:      ${users.length}`)
+  console.log(`Users:      ${allUsers.length}`)
   console.log(`Reports:    ${totalReports}`)
   console.log(`Sales:      ${totalSales}`)
   console.log(`Stocks:     ${totalStocks}`)
@@ -397,9 +435,12 @@ async function main() {
   console.log('  Password: password123\n')
   console.log('Store Accounts:')
   stores.forEach(store => {
-    console.log(`  ${store.storeName}`)
-    console.log(`    Email:    ${store.email}`)
-    console.log(`    Password: password123`)
+    console.log(`  ${store.name}`)
+    const owner = allUsers.find(u => u.id === store.ownerId)
+    if (owner) {
+      console.log(`    Email:    ${owner.email}`)
+      console.log('    Password: password123\n')
+    }
   })
   console.log('')
 }

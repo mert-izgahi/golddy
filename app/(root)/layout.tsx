@@ -1,9 +1,9 @@
 "use client";
+import { useLangStore } from '@/store/lang-store';
 import React, { useEffect } from 'react'
-import { useLang } from '@/hooks/use-lang'
 
 function layout({ children }: { children: React.ReactNode }) {
-    const { lang } = useLang()
+    const { lang } = useLangStore()
     
     // Change the direction and lang based on the selected language
     useEffect(() => {

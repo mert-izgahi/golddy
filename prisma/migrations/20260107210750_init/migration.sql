@@ -26,9 +26,9 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "name" TEXT,
     "role" "Role" NOT NULL DEFAULT 'STORE',
+    "phoneNumber" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "storeId" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -36,10 +36,7 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Store" (
     "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "storeName" TEXT NOT NULL,
-    "managerName" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "address" TEXT,
     "city" TEXT,
     "logoUrl" TEXT,
@@ -48,6 +45,7 @@ CREATE TABLE "Store" (
     "status" "StoreStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "Store_pkey" PRIMARY KEY ("id")
 );
@@ -56,6 +54,7 @@ CREATE TABLE "Store" (
 CREATE TABLE "Sale" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "weight" DOUBLE PRECISION NOT NULL,
     "goldType" "GoldType" NOT NULL,
@@ -138,13 +137,10 @@ CREATE TABLE "Report" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Store_email_key" ON "Store"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Store_storeName_key" ON "Store"("storeName");
+CREATE UNIQUE INDEX "Store_name_key" ON "Store"("name");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Store" ADD CONSTRAINT "Store_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_reportId_fkey" FOREIGN KEY ("reportId") REFERENCES "Report"("id") ON DELETE SET NULL ON UPDATE CASCADE;
