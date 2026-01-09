@@ -1,3 +1,4 @@
+// routes/sales.routes.ts
 import prisma from "@/lib/prisma";
 import { Hono } from "hono";
 import { authenticate } from "@/lib/auth-middlewares";

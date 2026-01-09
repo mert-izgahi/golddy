@@ -1,3 +1,4 @@
+// hooks/use-sales.ts
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';

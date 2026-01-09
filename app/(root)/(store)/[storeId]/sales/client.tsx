@@ -1,3 +1,4 @@
+// app/(root)/(store)/[storeId]/sales/client.tsx
 "use client";
 import { Button } from '@/components/ui/button';
 import { useLangStore } from '@/store/lang-store'

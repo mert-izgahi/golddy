@@ -1,4 +1,4 @@
-import React from 'react'
+// app/(root)/(store)/[storeId]/sales/new/page.tsx
 import NewSalePage from './client'
 
 interface Props {

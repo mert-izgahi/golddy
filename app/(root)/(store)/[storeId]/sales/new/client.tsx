@@ -1,7 +1,7 @@
+// app/(root)/(store)/[storeId]/sales/new/client.tsx
 "use client";
 
 import { useLangStore } from "@/store/lang-store";
-import { CreateSaleForm } from "@/components/forms/create-sale-form";
 import { SaleForm } from "@/components/forms/sale-form";
 
 interface Props {

@@ -1,5 +1,4 @@
-import prisma from '@/lib/prisma'
-import React from 'react'
+// app/(root)/(store)/[storeId]/sales/page.tsx
 import SalesPage from './client'
 
 interface Props {

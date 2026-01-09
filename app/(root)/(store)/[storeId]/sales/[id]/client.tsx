@@ -1,7 +1,7 @@
+// app/(root)/(store)/[storeId]/sales/[id]/client.tsx
 "use client";
 
 import { useLangStore } from "@/store/lang-store";
-import { UpdateSaleForm } from "@/components/forms/update-sale-form";
 import { useGetSaleById } from "@/hooks/use-sales";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

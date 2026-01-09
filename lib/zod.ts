@@ -1,3 +1,4 @@
+// lib/zod.ts
 import { z } from "zod";
 import { CurrencyType, GoldType, PaymentType } from "./generated/prisma";
 
