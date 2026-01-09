@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useLangStore } from '@/store/lang-store'
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useGetSalesByStore, useDeleteSale } from '@/hooks/use-sales';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -23,7 +23,7 @@ function SalesPage({ storeId }: Props) {
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    
+
     const { data: salesData, isLoading, error } = useGetSalesByStore(storeId, page, pageSize);
     const deleteSaleMutation = useDeleteSale();
 
@@ -47,7 +47,7 @@ function SalesPage({ storeId }: Props) {
     const getGoldTypeLabel = (goldType: string) => {
         const labels = {
             GOLD_14: lang === "en" ? "14K" : "١٤ عيار",
-            GOLD_18: lang === "en" ? "18K" : "١٨ عيار", 
+            GOLD_18: lang === "en" ? "18K" : "١٨ عيار",
             GOLD_21: lang === "en" ? "21K" : "٢١ عيار",
             GOLD_24: lang === "en" ? "24K" : "٢٤ عيار"
         };
@@ -168,8 +168,8 @@ function SalesPage({ storeId }: Props) {
                                         {lang === "en" ? "Delete Sale" : "حذف البيع"}
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        {lang === "en" 
-                                            ? "Are you sure you want to delete this sale? This action cannot be undone." 
+                                        {lang === "en"
+                                            ? "Are you sure you want to delete this sale? This action cannot be undone."
                                             : "هل أنت متأكد من أنك تريد حذف هذا البيع؟ لا يمكن التراجع عن هذا الإجراء."
                                         }
                                     </AlertDialogDescription>

@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';
 import { Sale } from '@/lib/generated/prisma/client';
-
+import { CreateSaleInput, UpdateSaleInput } from '@/lib/zod';
 
 // Hook to get sales by store with pagination
 export const useGetSalesByStore = (storeId: string, page: number = 1, limit: number = 10) => {
@@ -33,8 +33,8 @@ export const useGetSaleById = (saleId: string) => {
 // Hook to create a new sale
 export const useCreateSale = () => {
     return useMutation({
-        mutationFn: async (newSale: Omit<Sale, 'id' | 'date'>) => {
-            const response = await axios.post<ApiResponse<Sale>>('/api/sales', newSale);
+        mutationFn: async ({ storeId, data }: { storeId: string; data: CreateSaleInput }) => {
+            const response = await axios.post<ApiResponse<Sale>>(`/api/sales/store/${storeId}`, data);
             return response.data.result;
         },
     });
@@ -43,7 +43,7 @@ export const useCreateSale = () => {
 // Hook to update a sale
 export const useUpdateSale = () => {
     return useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: Partial<Sale> }) => {
+        mutationFn: async ({ id, data }: { id: string; data: UpdateSaleInput }) => {
             const response = await axios.put<ApiResponse<Sale>>(`/api/sales/${id}`, data);
             return response.data.result;
         },

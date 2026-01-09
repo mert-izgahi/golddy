@@ -2,6 +2,8 @@ import prisma from "@/lib/prisma";
 import { Hono } from "hono";
 import { authenticate } from "@/lib/auth-middlewares";
 import { ContextUser } from "@/lib/types";
+import { zValidator } from "@hono/zod-validator";
+import { getCreateSaleSchema, getUpdateSaleSchema } from "@/lib/zod";
 
 const salesRoutes = new Hono();
 
@@ -15,23 +17,23 @@ salesRoutes
         const page = parseInt(c.req.query("page") || "1");
         const limit = parseInt(c.req.query("limit") || "10");
         const skip = (page - 1) * limit;
-        
+
         // Get total count for pagination
         const total = await prisma.sale.count({
             where: { storeId }
         });
-        
+
         const sales = await prisma.sale.findMany({
             where: { storeId },
             orderBy: { date: 'desc' },
             skip,
             take: limit,
         });
-        
+
         const totalPages = Math.ceil(total / limit);
-        
-        return c.json({ 
-            message: "Sales fetched successfully", 
+
+        return c.json({
+            message: "Sales fetched successfully",
             result: sales,
             pagination: {
                 page,
@@ -41,7 +43,7 @@ salesRoutes
                 hasNext: page < totalPages,
                 hasPrevious: page > 1
             },
-            success: true 
+            success: true
         });
     })
 
@@ -59,58 +61,38 @@ salesRoutes
                 }
             }
         });
-        
+
         if (!sale) {
             return c.json({ message: "Sale not found", result: null, success: false }, 404);
         }
-        
+
         return c.json({ message: "Sale fetched successfully", result: sale, success: true });
     })
 
     // @desc    Create a new sale
-    // @route   POST /sales
+    // @route   POST /sales/store/:storeId
     // @access  Private
     // @method  Post
-    .post("/", authenticate, async (c) => {
+    .post("/store/:storeId", authenticate, zValidator('json', getCreateSaleSchema('en')), async (c) => {
         const user = c.get("user") as ContextUser;
-        const body = await c.req.json();
-        const { 
-            storeId, 
-            weight, 
-            goldType, 
-            pricePerGram, 
-            total, 
-            currency, 
-            customerName, 
-            description, 
-            paymentType 
+        const { storeId } = c.req.param();
+        const body = c.req.valid('json');
+        const {
+            weight,
+            goldType,
+            pricePerGram,
+            total,
+            currency,
+            customerName,
+            description,
+            paymentType
         } = body;
-
-        // Validate required fields
-        if (!storeId || !weight || !goldType || !pricePerGram || !total || !currency || !paymentType) {
-            return c.json({ message: "Missing required fields", result: null, success: false }, 400);
-        }
-
-        // Validate enum values
-        const validGoldTypes = ['GOLD_14', 'GOLD_18', 'GOLD_21', 'GOLD_24'];
-        const validCurrencies = ['USD', 'SYP'];
-        const validPaymentTypes = ['CASH', 'TRANSFER', 'OTHER'];
-
-        if (!validGoldTypes.includes(goldType)) {
-            return c.json({ message: "Invalid gold type", result: null, success: false }, 400);
-        }
-        if (!validCurrencies.includes(currency)) {
-            return c.json({ message: "Invalid currency type", result: null, success: false }, 400);
-        }
-        if (!validPaymentTypes.includes(paymentType)) {
-            return c.json({ message: "Invalid payment type", result: null, success: false }, 400);
-        }
 
         // Verify store exists and user has access
         const store = await prisma.store.findFirst({
-            where: { 
+            where: {
                 id: storeId,
-                ownerId: user!.id 
+                ownerId: user!.id
             }
         });
 
@@ -126,8 +108,8 @@ salesRoutes
                 pricePerGram,
                 total,
                 currency,
-                customerName,
-                description,
+                customerName: customerName || null,
+                description: description || null,
                 paymentType,
                 date: new Date()
             }
@@ -140,24 +122,14 @@ salesRoutes
     // @route   PUT /sales/:id
     // @access  Private
     // @method  Put
-    .put("/:id", authenticate, async (c) => {
+    .put("/:id", authenticate, zValidator('json', getUpdateSaleSchema('en')), async (c) => {
         const user = c.get("user") as ContextUser;
         const { id } = c.req.param();
-        const body = await c.req.json();
-        const { 
-            weight, 
-            goldType, 
-            pricePerGram, 
-            total, 
-            currency, 
-            customerName, 
-            description, 
-            paymentType 
-        } = body;
+        const body = c.req.valid('json');
 
         // Check if sale exists and user has access
         const existingSale = await prisma.sale.findFirst({
-            where: { 
+            where: {
                 id,
                 store: { ownerId: user!.id }
             }
@@ -167,35 +139,15 @@ salesRoutes
             return c.json({ message: "Sale not found or access denied", result: null, success: false }, 403);
         }
 
-        // Validate enum values if provided
-        if (goldType) {
-            const validGoldTypes = ['GOLD_14', 'GOLD_18', 'GOLD_21', 'GOLD_24'];
-            if (!validGoldTypes.includes(goldType)) {
-                return c.json({ message: "Invalid gold type", result: null, success: false }, 400);
-            }
-        }
-        if (currency) {
-            const validCurrencies = ['USD', 'SYP'];
-            if (!validCurrencies.includes(currency)) {
-                return c.json({ message: "Invalid currency type", result: null, success: false }, 400);
-            }
-        }
-        if (paymentType) {
-            const validPaymentTypes = ['CASH', 'TRANSFER', 'OTHER'];
-            if (!validPaymentTypes.includes(paymentType)) {
-                return c.json({ message: "Invalid payment type", result: null, success: false }, 400);
-            }
-        }
-
         const updateData: any = {};
-        if (weight !== undefined) updateData.weight = weight;
-        if (goldType !== undefined) updateData.goldType = goldType;
-        if (pricePerGram !== undefined) updateData.pricePerGram = pricePerGram;
-        if (total !== undefined) updateData.total = total;
-        if (currency !== undefined) updateData.currency = currency;
-        if (customerName !== undefined) updateData.customerName = customerName;
-        if (description !== undefined) updateData.description = description;
-        if (paymentType !== undefined) updateData.paymentType = paymentType;
+        if (body.weight !== undefined) updateData.weight = body.weight;
+        if (body.goldType !== undefined) updateData.goldType = body.goldType;
+        if (body.pricePerGram !== undefined) updateData.pricePerGram = body.pricePerGram;
+        if (body.total !== undefined) updateData.total = body.total;
+        if (body.currency !== undefined) updateData.currency = body.currency;
+        if (body.customerName !== undefined) updateData.customerName = body.customerName || null;
+        if (body.description !== undefined) updateData.description = body.description || null;
+        if (body.paymentType !== undefined) updateData.paymentType = body.paymentType;
 
         const updatedSale = await prisma.sale.update({
             where: { id },
@@ -215,7 +167,7 @@ salesRoutes
 
         // Check if sale exists and user has access
         const existingSale = await prisma.sale.findFirst({
-            where: { 
+            where: {
                 id,
                 store: { ownerId: user!.id }
             }
@@ -242,9 +194,9 @@ salesRoutes
 
         // Verify store exists and user has access
         const store = await prisma.store.findFirst({
-            where: { 
+            where: {
                 id: storeId,
-                ownerId: user!.id 
+                ownerId: user!.id
             }
         });
 
