@@ -9,6 +9,16 @@ export type UserWithStores = User & {
 
 export type ApiResponse<T> = {
     result: T;
-    message: string;
-    success: boolean;
+}
+
+export type ApiResponseWithPagination<T> = {
+    result: T[],
+    pagination: {
+        page: number,
+        limit: number,
+        total: number,
+        totalPages: number,
+        hasNext: boolean,
+        hasPrevious: boolean
+    },
 }

@@ -7,7 +7,7 @@ import { handle } from 'hono/vercel'
 // routes
 import { authRoutes } from '@/routes/auth.routes';
 import { storesRoutes } from '@/routes/stores.routes';
-
+import { salesRoutes } from '@/routes/sales.routes';
 declare module "hono" {
     interface ContextVariableMap {
         user: ContextUser | null;
@@ -25,7 +25,7 @@ app.get('/health', (c) => {
 
 app.route('/auth', authRoutes);
 app.route('/stores', storesRoutes);
-
+app.route('/sales', salesRoutes)
 // Not found
 app.notFound((c) =>
     c.json(
