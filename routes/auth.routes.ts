@@ -141,3 +141,6 @@ authRoutes
 
         return c.json({ message: "User updated successfully", result: updatedUser, success: true });
     });
+
+
+    

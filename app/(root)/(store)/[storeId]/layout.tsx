@@ -8,7 +8,6 @@ import { redirect } from 'next/navigation';
 import { PropsWithChildren } from 'react'
 
 async function layout({ children }: PropsWithChildren) {
-
     const user = await getAuthUser();
 
     if (!user) {

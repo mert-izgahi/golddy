@@ -1,3 +1,5 @@
+"use client";
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { SignInInput } from "@/lib/zod";

@@ -1,15 +1,19 @@
+"use client"
 import { Store } from '@/lib/generated/prisma'
-import React from 'react'
 import DateTimeArea from '../shared/date-time'
-import LangSwitcher from '../shared/lang-switcher'
+import UserButton from '../buttons/user-button'
+
 
 
 function Header({ store }: { store: Store }) {
     return (
         <header className='h-16 border-b flex flex-row items-center px-4'>
-            <DateTimeArea />
-            <div className="ms-auto">
-                <LangSwitcher />
+            <div className="flex items-center space-x-2">
+                
+                <DateTimeArea />
+            </div>
+            <div className="ms-auto flex items-center space-x-4">
+                <UserButton storeId={store.id} />
             </div>
         </header>
     )
