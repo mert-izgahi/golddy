@@ -57,7 +57,7 @@ function SalesPage({ storeId }: Props) {
     const getPaymentTypeLabel = (paymentType: string) => {
         const labels = {
             CASH: lang === "en" ? "Cash" : "نقدي",
-            TRANSFER: lang === "en" ? "Transfer" : "تحويل بنكي",
+            TRANSFER: lang === "en" ? "Transfer" : "تحويل شام كاش",
             OTHER: lang === "en" ? "Other" : "أخرى"
         };
         return labels[paymentType as keyof typeof labels] || paymentType;

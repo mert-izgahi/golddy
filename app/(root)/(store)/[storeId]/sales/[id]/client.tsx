@@ -5,6 +5,7 @@ import { UpdateSaleForm } from "@/components/forms/update-sale-form";
 import { useGetSaleById } from "@/hooks/use-sales";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { SaleForm } from "@/components/forms/sale-form";
 
 interface Props {
     storeId: string;
@@ -75,7 +76,7 @@ function UpdateSalePage({ storeId, saleId }: Props) {
             </div>
 
             {/* Update Sale Form */}
-            <UpdateSaleForm saleId={saleId} storeId={storeId} />
+            <SaleForm mode="edit" saleId={saleId} storeId={storeId} />
         </div>
     );
 }

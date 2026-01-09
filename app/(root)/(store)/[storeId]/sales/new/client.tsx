@@ -2,6 +2,7 @@
 
 import { useLangStore } from "@/store/lang-store";
 import { CreateSaleForm } from "@/components/forms/create-sale-form";
+import { SaleForm } from "@/components/forms/sale-form";
 
 interface Props {
     storeId: string;
@@ -24,7 +25,7 @@ function NewSalePage({ storeId }: Props) {
             </div>
 
             {/* Create Sale Form */}
-            <CreateSaleForm storeId={storeId} />
+            <SaleForm mode="create" storeId={storeId} />
         </div>
     );
 }

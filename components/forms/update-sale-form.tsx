@@ -115,7 +115,7 @@ export function UpdateSaleForm({ saleId, storeId }: UpdateSaleFormProps) {
 
     const paymentTypeOptions = [
         { value: "CASH", label: lang === "en" ? "Cash" : "نقدي" },
-        { value: "TRANSFER", label: lang === "en" ? "Bank Transfer" : "تحويل بنكي" },
+        { value: "TRANSFER", label: lang === "en" ? "Bank Transfer" : "تحويل شام كاش" },
         { value: "OTHER", label: lang === "en" ? "Other" : "أخرى" },
     ];
 

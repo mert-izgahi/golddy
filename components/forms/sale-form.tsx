@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLangStore } from "@/store/lang-store";
-import { getCreateSaleSchema, CreateSaleInput } from "@/lib/zod";
-import { useCreateSale } from "@/hooks/use-sales";
+import { getCreateSaleSchema, getUpdateSaleSchema, CreateSaleInput, UpdateSaleInput } from "@/lib/zod";
+import { useCreateSale, useUpdateSale, useGetSaleById } from "@/hooks/use-sales";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,19 +28,32 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CurrencyType, GoldType, PaymentType } from "@/lib/generated/prisma";
 
-interface CreateSaleFormProps {
+interface SaleFormProps {
     storeId: string;
+    mode: "create" | "edit";
+    saleId?: string;
 }
 
-export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
+export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
     const { lang } = useLangStore();
     const router = useRouter();
-    const createSaleMutation = useCreateSale();
 
-    const form = useForm<CreateSaleInput>({
-        resolver: zodResolver(getCreateSaleSchema(lang)),
+    // Hooks for create and edit
+    const createSaleMutation = useCreateSale();
+    const updateSaleMutation = useUpdateSale();
+    const { data: sale, isLoading: isLoadingSale } = useGetSaleById(
+        mode === "edit" && saleId ? saleId : ""
+    );
+
+    const form = useForm<CreateSaleInput | UpdateSaleInput>({
+        resolver: zodResolver(
+            mode === "create"
+                ? getCreateSaleSchema(lang)
+                : getUpdateSaleSchema(lang)
+        ),
         defaultValues: {
             weight: 0,
             goldType: GoldType.GOLD_14,
@@ -53,31 +66,62 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
         },
     });
 
+    // Set form values when in edit mode and sale data is loaded
+    useEffect(() => {
+        if (mode === "edit" && sale) {
+            form.reset({
+                weight: sale.weight,
+                goldType: sale.goldType as any,
+                pricePerGram: sale.pricePerGram,
+                total: sale.total,
+                currency: sale.currency as any,
+                paymentType: sale.paymentType as any,
+                customerName: sale.customerName || "",
+                description: sale.description || "",
+            });
+        }
+    }, [sale, form, mode]);
+
     // Auto-calculate total when weight or pricePerGram changes
     const weight = form.watch("weight");
     const pricePerGram = form.watch("pricePerGram");
 
     useEffect(() => {
-        if (weight > 0 && pricePerGram > 0) {
-            const calculatedTotal = weight * pricePerGram;
+        if (weight! > 0 && pricePerGram! > 0) {
+            const calculatedTotal = weight! * pricePerGram!;
             form.setValue("total", calculatedTotal);
         }
     }, [weight, pricePerGram, form]);
 
-    const onSubmit = async (data: CreateSaleInput) => {
+    const onSubmit = async (data: CreateSaleInput | UpdateSaleInput) => {
         try {
-            await createSaleMutation.mutateAsync({
-                storeId,
-                data
-            });
-            toast.success(
-                lang === "en" ? "Sale created successfully" : "تم إنشاء البيع بنجاح"
-            );
+            if (mode === "create") {
+                await createSaleMutation.mutateAsync({
+                    storeId,
+                    data: data as CreateSaleInput
+                });
+                toast.success(
+                    lang === "en" ? "Sale created successfully" : "تم إنشاء البيع بنجاح"
+                );
+            } else {
+                if (!saleId) {
+                    throw new Error("Sale ID is required for update");
+                }
+                await updateSaleMutation.mutateAsync({
+                    id: saleId,
+                    data: data as UpdateSaleInput
+                });
+                toast.success(
+                    lang === "en" ? "Sale updated successfully" : "تم تحديث البيع بنجاح"
+                );
+            }
             router.push(`/${storeId}/sales`);
         } catch (error: any) {
             toast.error(
                 error?.message ||
-                (lang === "en" ? "Failed to create sale" : "فشل في إنشاء البيع")
+                (mode === "create"
+                    ? lang === "en" ? "Failed to create sale" : "فشل في إنشاء البيع"
+                    : lang === "en" ? "Failed to update sale" : "فشل في تحديث البيع")
             );
         }
     };
@@ -100,16 +144,46 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
         { value: PaymentType.OTHER, label: lang === "en" ? "Other" : "أخرى" },
     ];
 
+    const isPending = mode === "create"
+        ? createSaleMutation.isPending
+        : updateSaleMutation.isPending;
+
+    // Show loading state for edit mode
+    if (mode === "edit" && isLoadingSale) {
+        return (
+            <Card className="border-none shadow-none">
+                <CardHeader>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
     return (
         <Card className="border-none shadow-none">
             <CardHeader>
                 <CardTitle>
-                    {lang === "en" ? "Create New Sale" : "إنشاء بيع جديد"}
+                    {mode === "create"
+                        ? lang === "en" ? "Create New Sale" : "إنشاء بيع جديد"
+                        : lang === "en" ? "Update Sale" : "تحديث البيع"}
                 </CardTitle>
                 <CardDescription>
-                    {lang === "en"
-                        ? "Fill in the details to record a new sale"
-                        : "املأ التفاصيل لتسجيل بيع جديد"}
+                    {mode === "create"
+                        ? lang === "en"
+                            ? "Fill in the details to record a new sale"
+                            : "املأ التفاصيل لتسجيل بيع جديد"
+                        : lang === "en"
+                            ? "Update the sale details below"
+                            : "تحديث تفاصيل البيع أدناه"}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -127,7 +201,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                         </FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full" lang={lang}>
@@ -162,6 +236,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                                 step="0.01"
                                                 placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
                                                 {...field}
+                                                value={field.value || ""}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                             />
                                         </FormControl>
@@ -185,6 +260,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                                 step="0.01"
                                                 placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
                                                 {...field}
+                                                value={field.value || ""}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                             />
                                         </FormControl>
@@ -208,6 +284,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                                 step="0.01"
                                                 placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
                                                 {...field}
+                                                value={field.value || ""}
                                                 disabled
                                                 className="bg-muted"
                                             />
@@ -228,7 +305,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                         </FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -259,7 +336,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                         </FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full" lang={lang}>
@@ -293,6 +370,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                         <Input
                                             placeholder={lang === "en" ? "Enter customer name" : "أدخل اسم العميل"}
                                             {...field}
+                                            value={field.value || ""}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -314,6 +392,7 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                             placeholder={lang === "en" ? "Enter any additional notes" : "أدخل أي ملاحظات إضافية"}
                                             className="resize-none"
                                             {...field}
+                                            value={field.value || ""}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -327,19 +406,21 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => router.back()}
-                                disabled={createSaleMutation.isPending}
+                                disabled={isPending}
                             >
                                 {lang === "en" ? "Cancel" : "إلغاء"}
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={createSaleMutation.isPending}
+                                disabled={isPending}
                                 className="bg-teal-800 hover:bg-teal-800/80"
                             >
-                                {createSaleMutation.isPending && (
+                                {isPending && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
-                                {lang === "en" ? "Create Sale" : "إنشاء بيع"}
+                                {mode === "create"
+                                    ? lang === "en" ? "Create Sale" : "إنشاء بيع"
+                                    : lang === "en" ? "Update Sale" : "تحديث البيع"}
                             </Button>
                         </div>
                     </form>
