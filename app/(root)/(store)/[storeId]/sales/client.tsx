@@ -148,7 +148,7 @@ function SalesPage({ storeId }: Props) {
                             size="sm"
                             asChild
                         >
-                            <Link href={`/${storeId}/sales/${sale.id}/edit`}>
+                            <Link href={`/${storeId}/sales/${sale.id}`}>
                                 <Edit className="h-4 w-4" />
                             </Link>
                         </Button>

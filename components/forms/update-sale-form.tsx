@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CurrencyType, GoldType, PaymentType } from "@/lib/generated/prisma/client";
 
 interface UpdateSaleFormProps {
     saleId: string;
@@ -45,11 +46,11 @@ export function UpdateSaleForm({ saleId, storeId }: UpdateSaleFormProps) {
         resolver: zodResolver(getUpdateSaleSchema(lang)),
         defaultValues: {
             weight: 0,
-            goldType: "GOLD_18",
+            goldType: GoldType.GOLD_14,
             pricePerGram: 0,
             total: 0,
-            currency: "USD",
-            paymentType: "CASH",
+            currency: CurrencyType.USD,
+            paymentType: PaymentType.CASH,
             customerName: "",
             description: "",
         },
@@ -84,14 +85,17 @@ export function UpdateSaleForm({ saleId, storeId }: UpdateSaleFormProps) {
 
     const onSubmit = async (data: UpdateSaleInput) => {
         try {
-            await updateSaleMutation.mutateAsync({ id: saleId, data });
+            await updateSaleMutation.mutateAsync({
+                id: saleId,
+                data
+            });
             toast.success(
                 lang === "en" ? "Sale updated successfully" : "تم تحديث البيع بنجاح"
             );
             router.push(`/${storeId}/sales`);
         } catch (error: any) {
             toast.error(
-                error?.response?.data?.message ||
+                error?.message ||
                 (lang === "en" ? "Failed to update sale" : "فشل في تحديث البيع")
             );
         }

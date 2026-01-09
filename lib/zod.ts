@@ -37,7 +37,7 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
             .positive(positiveMessage),
 
         goldType: z
-            .nativeEnum(GoldType, requiredMessage)
+            .enum(GoldType, requiredMessage)
             .refine((val) => Object.values(GoldType).includes(val), {
                 message: invalidGoldType,
             }),
@@ -51,13 +51,13 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
             .positive(positiveMessage),
 
         currency: z
-            .nativeEnum(CurrencyType, requiredMessage)
+            .enum(CurrencyType, requiredMessage)
             .refine((val) => Object.values(CurrencyType).includes(val), {
                 message: invalidCurrency,
             }),
 
         paymentType: z
-            .nativeEnum(PaymentType, requiredMessage)
+            .enum(PaymentType, requiredMessage)
             .refine((val) => Object.values(PaymentType).includes(val), {
                 message: invalidPaymentType,
             }),
@@ -82,7 +82,7 @@ export const getUpdateSaleSchema = (lang: "en" | "ar") => {
         weight: z.number().positive(positiveMessage).optional(),
 
         goldType: z
-            .nativeEnum(GoldType)
+            .enum(GoldType)
             .refine((val) => Object.values(GoldType).includes(val), {
                 message: invalidGoldType,
             })
@@ -92,14 +92,14 @@ export const getUpdateSaleSchema = (lang: "en" | "ar") => {
         total: z.number().positive(positiveMessage).optional(),
 
         currency: z
-            .nativeEnum(CurrencyType)
+            .enum(CurrencyType)
             .refine((val) => Object.values(CurrencyType).includes(val), {
                 message: invalidCurrency,
             })
             .optional(),
 
         paymentType: z
-            .nativeEnum(PaymentType)
+            .enum(PaymentType)
             .refine((val) => Object.values(PaymentType).includes(val), {
                 message: invalidPaymentType,
             })

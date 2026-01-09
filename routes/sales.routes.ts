@@ -73,7 +73,9 @@ salesRoutes
     // @route   POST /sales/store/:storeId
     // @access  Private
     // @method  Post
-    .post("/store/:storeId", authenticate, zValidator('json', getCreateSaleSchema('en')), async (c) => {
+    .post("/store/:storeId", zValidator('json', getCreateSaleSchema('en')), authenticate, async (c) => {
+        console.log("👉👉 CREATE SALE");
+        
         const user = c.get("user") as ContextUser;
         const { storeId } = c.req.param();
         const body = c.req.valid('json');

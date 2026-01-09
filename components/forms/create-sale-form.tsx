@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { CurrencyType, GoldType, PaymentType } from "@/lib/generated/prisma";
 
 interface CreateSaleFormProps {
     storeId: string;
@@ -42,11 +43,11 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
         resolver: zodResolver(getCreateSaleSchema(lang)),
         defaultValues: {
             weight: 0,
-            goldType: "GOLD_18",
+            goldType: GoldType.GOLD_14,
             pricePerGram: 0,
             total: 0,
-            currency: "USD",
-            paymentType: "CASH",
+            currency: CurrencyType.USD,
+            paymentType: PaymentType.CASH,
             customerName: "",
             description: "",
         },
@@ -65,14 +66,17 @@ export function CreateSaleForm({ storeId }: CreateSaleFormProps) {
 
     const onSubmit = async (data: CreateSaleInput) => {
         try {
-            await createSaleMutation.mutateAsync({ storeId, data });
+            await createSaleMutation.mutateAsync({
+                storeId,
+                data
+            });
             toast.success(
                 lang === "en" ? "Sale created successfully" : "تم إنشاء البيع بنجاح"
             );
             router.push(`/${storeId}/sales`);
         } catch (error: any) {
             toast.error(
-                error?.response?.data?.message ||
+                error?.message ||
                 (lang === "en" ? "Failed to create sale" : "فشل في إنشاء البيع")
             );
         }
