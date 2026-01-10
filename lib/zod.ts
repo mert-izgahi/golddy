@@ -1,6 +1,7 @@
 // lib/zod.ts
 import { z } from "zod";
-import { CurrencyType, GoldType, PaymentType,StockType, } from "./generated/prisma";
+import { CurrencyType, GoldType, PaymentType, StockType, } from "./generated/prisma";
+import dayjs from "dayjs";
 
 // ✅ Sign-in schema
 export const getSignInSchema = (lang: "en" | "ar") => {
@@ -170,9 +171,57 @@ export const getUpdateStockSchema = (lang: "en" | "ar") => {
     });
 };
 
+// ✅ Create Settings schema
+export const getUpdateSettingsSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+    const positiveMessage =
+        lang === "en" ? "Must be greater than or equal to 0" : "يجب أن يكون أكبر من أو يساوي 0";
+
+    return z.object({
+        priceGold14USD: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold18USD: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold21USD: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold24USD: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold14SYP: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold18SYP: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold21SYP: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        priceGold24SYP: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+
+        exchangeRateUSDtoSYP: z
+            .number(requiredMessage)
+            .min(0, positiveMessage),
+    });
+};
+
+
 // ✅ Export inferred types
 export type SignInInput = z.infer<ReturnType<typeof getSignInSchema>>;
 export type CreateSaleInput = z.infer<ReturnType<typeof getCreateSaleSchema>>;
 export type UpdateSaleInput = z.infer<ReturnType<typeof getUpdateSaleSchema>>;
 export type CreateStockInput = z.infer<ReturnType<typeof getCreateStockSchema>>;
 export type UpdateStockInput = z.infer<ReturnType<typeof getUpdateStockSchema>>;
+export type UpdateSettingsInput = z.infer<ReturnType<typeof getUpdateSettingsSchema>>;

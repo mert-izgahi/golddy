@@ -54,6 +54,12 @@ model Store {
   currentUSD Float @default(0)
   currentSYP Float @default(0)
 
+  // Profit Margins (percentage)
+  profitMarginGold14 Float @default(0)
+  profitMarginGold18 Float @default(0)
+  profitMarginGold21 Float @default(0)
+  profitMarginGold24 Float @default(0)
+
   // Relations
   owner     User       @relation(fields: [ownerId], references: [id])
   ownerId   String
