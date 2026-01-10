@@ -1,38 +1,46 @@
-import { getAuthUser } from '@/lib/actions';
+"use client";
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
 import { Role } from '@/lib/generated/prisma';
-import prisma from '@/lib/prisma';
-import { redirect } from 'next/navigation';
 
-async function page() {
+export default function page() {
+  const router = useRouter();
 
-  const user = await getAuthUser();
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['auth-user'],
+    queryFn: async () => {
+      const response = await apiClient.get('/auth/me');
+      return response.data;
+    },
+    retry: false,
+  });
 
-  if (!user) {
-    // Redirect to authentication page
-    redirect("/auth/sign-in");
-  }
-
-  if (user?.role === Role.ADMIN) {
-    // Redirect to admin dashboard
-    redirect("/admin");
-  }
-
-  const store = await prisma.store.findFirst({
-    where: {
-      ownerId: user?.id
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/sign-in');
+      } else if (user?.role === Role.ADMIN) {
+        router.push('/admin');
+      } else {
+        // Check if user has a store
+        apiClient.get(`/stores/user/${user.id}`).then((response) => {
+          const store = response.data;
+          if (!store) {
+            router.push('/create-store');
+          } else {
+            router.push(`/${store.id}`);
+          }
+        });
+      }
     }
-  })
+  }, [user, isLoading, router]);
 
-  if (user && !store) {
-    // Redirect to store creation page
-    // Note: In Next.js 13, you can use redirect from 'next/navigation'
-    // but since this is a server component, we can return a redirect response.
-    redirect('/create-store')
-  } else {
-    redirect(`/${store?.id}`)
-  }
-
-  return null;
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div>Loading...</div>
+    </div>
+  );
 }
-
-export default page

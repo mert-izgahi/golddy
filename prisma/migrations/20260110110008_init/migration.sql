@@ -45,6 +45,26 @@ CREATE TABLE "Store" (
     "status" "StoreStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "currentGold14" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currentGold18" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currentGold21" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currentGold24" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currentUSD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "currentSYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold14USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold18USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold21USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold24USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold14SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold18SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold21SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold24SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "exchangeRateUSDtoSYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "lastPriceUpdate" TIMESTAMP(3),
+    "profitMarginGold14" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "profitMarginGold18" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "profitMarginGold21" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "profitMarginGold24" DOUBLE PRECISION NOT NULL DEFAULT 5,
     "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "Store_pkey" PRIMARY KEY ("id")
@@ -53,17 +73,26 @@ CREATE TABLE "Store" (
 -- CreateTable
 CREATE TABLE "Sale" (
     "id" TEXT NOT NULL,
+    "invoiceNumber" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "weight" DOUBLE PRECISION NOT NULL,
     "goldType" "GoldType" NOT NULL,
-    "pricePerGram" DOUBLE PRECISION NOT NULL,
-    "total" DOUBLE PRECISION NOT NULL,
+    "pricePerGramUSD" DOUBLE PRECISION NOT NULL,
+    "pricePerGramSYP" DOUBLE PRECISION NOT NULL,
+    "totalUSD" DOUBLE PRECISION NOT NULL,
+    "totalSYP" DOUBLE PRECISION NOT NULL,
     "currency" "CurrencyType" NOT NULL,
-    "customerName" TEXT,
-    "description" TEXT,
     "paymentType" "PaymentType" NOT NULL,
+    "amountPaid" DOUBLE PRECISION NOT NULL,
+    "customerName" TEXT,
+    "customerPhone" TEXT,
+    "description" TEXT,
+    "costPriceUSD" DOUBLE PRECISION NOT NULL,
+    "profitUSD" DOUBLE PRECISION NOT NULL,
+    "profitSYP" DOUBLE PRECISION NOT NULL,
+    "profitMargin" DOUBLE PRECISION NOT NULL,
     "reportId" TEXT,
     "storeId" TEXT NOT NULL,
 
@@ -74,9 +103,15 @@ CREATE TABLE "Sale" (
 CREATE TABLE "Stock" (
     "id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "quantity" DOUBLE PRECISION NOT NULL,
     "goldType" "GoldType" NOT NULL,
+    "quantity" DOUBLE PRECISION NOT NULL,
     "type" "StockType" NOT NULL,
+    "balanceAfter" DOUBLE PRECISION NOT NULL,
+    "costPerGramUSD" DOUBLE PRECISION,
+    "totalCostUSD" DOUBLE PRECISION,
+    "totalCostSYP" DOUBLE PRECISION,
+    "supplier" TEXT,
+    "invoiceRef" TEXT,
     "note" TEXT,
     "reportId" TEXT,
     "storeId" TEXT NOT NULL,
@@ -88,11 +123,13 @@ CREATE TABLE "Stock" (
 CREATE TABLE "Exchange" (
     "id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "fromCurrency" "CurrencyType" NOT NULL,
-    "toCurrency" "CurrencyType" NOT NULL,
-    "amountFrom" DOUBLE PRECISION NOT NULL,
-    "amountTo" DOUBLE PRECISION NOT NULL,
-    "rate" DOUBLE PRECISION NOT NULL,
+    "fromCurrency" "CurrencyType",
+    "toCurrency" "CurrencyType",
+    "exchangeRate" DOUBLE PRECISION,
+    "amountFrom" DOUBLE PRECISION,
+    "amountTo" DOUBLE PRECISION,
+    "balanceUSDAfter" DOUBLE PRECISION NOT NULL,
+    "balanceSYPAfter" DOUBLE PRECISION NOT NULL,
     "reportId" TEXT,
     "storeId" TEXT NOT NULL,
 
@@ -138,6 +175,33 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Store_name_key" ON "Store"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Sale_invoiceNumber_key" ON "Sale"("invoiceNumber");
+
+-- CreateIndex
+CREATE INDEX "Sale_storeId_date_idx" ON "Sale"("storeId", "date");
+
+-- CreateIndex
+CREATE INDEX "Sale_invoiceNumber_idx" ON "Sale"("invoiceNumber");
+
+-- CreateIndex
+CREATE INDEX "Sale_reportId_idx" ON "Sale"("reportId");
+
+-- CreateIndex
+CREATE INDEX "Stock_storeId_date_idx" ON "Stock"("storeId", "date");
+
+-- CreateIndex
+CREATE INDEX "Stock_goldType_idx" ON "Stock"("goldType");
+
+-- CreateIndex
+CREATE INDEX "Stock_reportId_idx" ON "Stock"("reportId");
+
+-- CreateIndex
+CREATE INDEX "Exchange_storeId_date_idx" ON "Exchange"("storeId", "date");
+
+-- CreateIndex
+CREATE INDEX "Exchange_reportId_idx" ON "Exchange"("reportId");
 
 -- AddForeignKey
 ALTER TABLE "Store" ADD CONSTRAINT "Store_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -17,24 +17,24 @@ datasource db {
 // Used for authentication and access control.
 // Role determines if user is a global admin or store owner/employee.
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(STORE)
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String?
+  role        Role     @default(STORE)
   phoneNumber String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   // Relations
-  stores Store[]
+  stores      Store[]
 }
 
 // --------------------------------------------------------
 //  MODEL: Store
 // --------------------------------------------------------
 model Store {
-  id       String @id @default(cuid())
-  name            String      @unique
+  id                   String      @id @default(cuid())
+  name                 String      @unique
   address              String?
   city                 String?
   logoUrl              String?
@@ -44,8 +44,41 @@ model Store {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
+  // Initial/Current Inventory (in grams)
+  currentGold14 Float @default(0)
+  currentGold18 Float @default(0)
+  currentGold21 Float @default(0)
+  currentGold24 Float @default(0)
+
+  // Current Cash Balance
+  currentUSD Float @default(0)
+  currentSYP Float @default(0)
+
+  // Current Gold Prices (per gram) - Updated from API
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
+
+  priceGold14SYP Float @default(0)
+  priceGold18SYP Float @default(0)
+  priceGold21SYP Float @default(0)
+  priceGold24SYP Float @default(0)
+
+  // Current Exchange Rate
+  exchangeRateUSDtoSYP Float @default(0)
+
+  // Last price update timestamp
+  lastPriceUpdate DateTime?
+
+  // Profit margins (percentage)
+  profitMarginGold14 Float @default(5)
+  profitMarginGold18 Float @default(5)
+  profitMarginGold21 Float @default(5)
+  profitMarginGold24 Float @default(5)
+
   // Relations
-  owner     User     @relation(fields: [ownerId], references: [id])
+  owner     User       @relation(fields: [ownerId], references: [id])
   ownerId   String
   sales     Sale[]
   stocks    Stock[]
@@ -58,43 +91,81 @@ model Store {
 // --------------------------------------------------------
 // Represents each gold sale operation (by gram)
 model Sale {
-  id           String       @id @default(cuid())
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  date         DateTime     @default(now())
-  weight       Float
-  goldType     GoldType // 14, 18, 21, 24
-  pricePerGram Float
-  total        Float
-  currency     CurrencyType // USD or SYP
-  customerName String?
-  description  String?
-  paymentType  PaymentType // CASH, TRANSFER, OTHER
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  date          DateTime @default(now())
+
+  // Gold Details
+  weight          Float
+  goldType        GoldType
+  pricePerGramUSD Float
+  pricePerGramSYP Float
+
+  // Totals
+  totalUSD Float
+  totalSYP Float
+
+  // Payment Details
+  currency    CurrencyType
+  paymentType PaymentType // CASH, TRANSFER, OTHER
+  amountPaid  Float // Actual amount paid in chosen currency
+
+  // Customer & Notes
+  customerName  String?
+  customerPhone String?
+  description   String?
+
+  // Profit Calculation
+  costPriceUSD Float // Actual cost of gold
+  profitUSD    Float
+  profitSYP    Float
+  profitMargin Float // Percentage
 
   // Relations
   report   Report? @relation(fields: [reportId], references: [id])
   reportId String?
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
+
+  @@index([storeId, date])
+  @@index([invoiceNumber])
+  @@index([reportId])
 }
 
 // --------------------------------------------------------
-//  MODEL: Stock
+//  MODEL: StockMovement
 // --------------------------------------------------------
 // Tracks gold stock movements (add/remove)
 model Stock {
   id       String    @id @default(cuid())
   date     DateTime  @default(now())
-  quantity Float
   goldType GoldType
+  quantity Float // In grams (positive for ADD, stored as-is)
   type     StockType // ADD or REMOVE
-  note     String?
+
+  // Balances after this movement
+  balanceAfter Float
+
+  // Cost tracking (for purchases)
+  costPerGramUSD Float?
+  totalCostUSD   Float?
+  totalCostSYP   Float?
+
+  supplier   String?
+  invoiceRef String?
+  note       String?
 
   // Relations
   report   Report? @relation(fields: [reportId], references: [id])
   reportId String?
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
+
+  @@index([storeId, date])
+  @@index([goldType])
+  @@index([reportId])
 }
 
 // --------------------------------------------------------
@@ -102,19 +173,26 @@ model Stock {
 // --------------------------------------------------------
 // Currency exchange operations between USD and SYP
 model Exchange {
-  id           String       @id @default(cuid())
-  date         DateTime     @default(now())
-  fromCurrency CurrencyType
-  toCurrency   CurrencyType
-  amountFrom   Float
-  amountTo     Float
-  rate         Float
+  id              String        @id @default(cuid())
+  date            DateTime      @default(now())
+  // Exchange details (if type is EXCHANGE)
+  fromCurrency    CurrencyType?
+  toCurrency      CurrencyType?
+  exchangeRate    Float?
+  amountFrom      Float?
+  amountTo        Float?
+  // Balances after this movement
+  balanceUSDAfter Float
+  balanceSYPAfter Float
 
   // Relations
   report   Report? @relation(fields: [reportId], references: [id])
   reportId String?
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
+
+  @@index([storeId, date])
+  @@index([reportId])
 }
 
 // --------------------------------------------------------

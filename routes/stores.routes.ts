@@ -18,6 +18,19 @@ storesRoutes
         return c.json({ message: "Stores fetched successfully", result: stores, success: true });
     })
 
+    // @desc    Get store by user ID
+    // @route   GET /stores/user/:userId
+    // @access  Private
+    // @method  Get
+    .get("/user/:userId", authenticate, async (c) => {
+        const { userId } = c.req.param();
+        const store = await prisma.store.findFirst({
+            where: { ownerId: userId },
+        });
+
+        return c.json({ message: "Store fetched successfully", result: store, success: true });
+    })
+
     // @desc    Get store by ID
     // @route   GET /stores/:id
     // @access  Private

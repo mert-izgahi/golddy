@@ -12,6 +12,8 @@ export const getAuthUser = async (): Promise<ContextUser | null> => {
         }
         const userPayload = await verifyToken(token);
         if (!userPayload) {
+            const cookieStore = await cookies(); // Await the cookies()
+            await cookieStore.delete('token');
             return null;
         }
         const user = await prisma.user.findUnique({

@@ -1,8 +1,8 @@
-
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 import prisma from './lib/prisma'
 import { hashPassword } from './lib/hash-password'
+
 // Helper function to get random item from array
 function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
@@ -20,17 +20,23 @@ function pastDate(days: number): Date {
   return date
 }
 
+// Helper function to generate unique invoice number
+let invoiceCounter = 1000
+function generateInvoiceNumber(storeIndex: number): string {
+  return `INV-${storeIndex}-${invoiceCounter++}`
+}
+
 async function main() {
   console.log('🌱 Starting database seed...\n')
 
   // Clear existing data
   console.log('🧹 Cleaning existing data...')
-  await prisma.store.deleteMany()
-  await prisma.user.deleteMany()
   await prisma.sale.deleteMany()
   await prisma.stock.deleteMany()
   await prisma.exchange.deleteMany()
   await prisma.report.deleteMany()
+  await prisma.store.deleteMany()
+  await prisma.user.deleteMany()
   
   console.log('✅ Existing data cleaned\n')
 
@@ -114,6 +120,30 @@ async function main() {
         secondaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
         ownerId: storeOwners[0].id,
+        // Initialize current inventory
+        currentGold14: randomFloat(500, 1000),
+        currentGold18: randomFloat(400, 800),
+        currentGold21: randomFloat(600, 1200),
+        currentGold24: randomFloat(800, 1500),
+        // Initialize current cash
+        currentUSD: randomFloat(5000, 10000),
+        currentSYP: randomFloat(80000, 150000),
+        // Set initial prices
+        priceGold14USD: randomFloat(50, 60),
+        priceGold18USD: randomFloat(65, 75),
+        priceGold21USD: randomFloat(80, 90),
+        priceGold24USD: randomFloat(95, 105),
+        priceGold14SYP: randomFloat(700, 900),
+        priceGold18SYP: randomFloat(900, 1100),
+        priceGold21SYP: randomFloat(1100, 1400),
+        priceGold24SYP: randomFloat(1300, 1600),
+        exchangeRateUSDtoSYP: randomFloat(14, 16),
+        lastPriceUpdate: new Date(),
+        // Set profit margins
+        profitMarginGold14: randomFloat(3, 7),
+        profitMarginGold18: randomFloat(3, 7),
+        profitMarginGold21: randomFloat(3, 7),
+        profitMarginGold24: randomFloat(3, 7),
       },
     }),
     prisma.store.create({
@@ -126,6 +156,26 @@ async function main() {
         secondaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
         ownerId: storeOwners[1].id,
+        currentGold14: randomFloat(500, 1000),
+        currentGold18: randomFloat(400, 800),
+        currentGold21: randomFloat(600, 1200),
+        currentGold24: randomFloat(800, 1500),
+        currentUSD: randomFloat(5000, 10000),
+        currentSYP: randomFloat(80000, 150000),
+        priceGold14USD: randomFloat(50, 60),
+        priceGold18USD: randomFloat(65, 75),
+        priceGold21USD: randomFloat(80, 90),
+        priceGold24USD: randomFloat(95, 105),
+        priceGold14SYP: randomFloat(700, 900),
+        priceGold18SYP: randomFloat(900, 1100),
+        priceGold21SYP: randomFloat(1100, 1400),
+        priceGold24SYP: randomFloat(1300, 1600),
+        exchangeRateUSDtoSYP: randomFloat(14, 16),
+        lastPriceUpdate: new Date(),
+        profitMarginGold14: randomFloat(3, 7),
+        profitMarginGold18: randomFloat(3, 7),
+        profitMarginGold21: randomFloat(3, 7),
+        profitMarginGold24: randomFloat(3, 7),
       },
     }),
     prisma.store.create({
@@ -137,6 +187,26 @@ async function main() {
         primaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
         ownerId: storeOwners[2].id,
+        currentGold14: randomFloat(500, 1000),
+        currentGold18: randomFloat(400, 800),
+        currentGold21: randomFloat(600, 1200),
+        currentGold24: randomFloat(800, 1500),
+        currentUSD: randomFloat(5000, 10000),
+        currentSYP: randomFloat(80000, 150000),
+        priceGold14USD: randomFloat(50, 60),
+        priceGold18USD: randomFloat(65, 75),
+        priceGold21USD: randomFloat(80, 90),
+        priceGold24USD: randomFloat(95, 105),
+        priceGold14SYP: randomFloat(700, 900),
+        priceGold18SYP: randomFloat(900, 1100),
+        priceGold21SYP: randomFloat(1100, 1400),
+        priceGold24SYP: randomFloat(1300, 1600),
+        exchangeRateUSDtoSYP: randomFloat(14, 16),
+        lastPriceUpdate: new Date(),
+        profitMarginGold14: randomFloat(3, 7),
+        profitMarginGold18: randomFloat(3, 7),
+        profitMarginGold21: randomFloat(3, 7),
+        profitMarginGold24: randomFloat(3, 7),
       },
     }),
     prisma.store.create({
@@ -147,6 +217,26 @@ async function main() {
         primaryPhoneNumber: faker.phone.number(),
         status: 'SUSPEND',
         ownerId: storeOwners[3].id,
+        currentGold14: randomFloat(500, 1000),
+        currentGold18: randomFloat(400, 800),
+        currentGold21: randomFloat(600, 1200),
+        currentGold24: randomFloat(800, 1500),
+        currentUSD: randomFloat(5000, 10000),
+        currentSYP: randomFloat(80000, 150000),
+        priceGold14USD: randomFloat(50, 60),
+        priceGold18USD: randomFloat(65, 75),
+        priceGold21USD: randomFloat(80, 90),
+        priceGold24USD: randomFloat(95, 105),
+        priceGold14SYP: randomFloat(700, 900),
+        priceGold18SYP: randomFloat(900, 1100),
+        priceGold21SYP: randomFloat(1100, 1400),
+        priceGold24SYP: randomFloat(1300, 1600),
+        exchangeRateUSDtoSYP: randomFloat(14, 16),
+        lastPriceUpdate: new Date(),
+        profitMarginGold14: randomFloat(3, 7),
+        profitMarginGold18: randomFloat(3, 7),
+        profitMarginGold21: randomFloat(3, 7),
+        profitMarginGold24: randomFloat(3, 7),
       },
     }),
     prisma.store.create({
@@ -159,6 +249,26 @@ async function main() {
         secondaryPhoneNumber: faker.phone.number(),
         status: 'ACTIVE',
         ownerId: storeOwners[4].id,
+        currentGold14: randomFloat(500, 1000),
+        currentGold18: randomFloat(400, 800),
+        currentGold21: randomFloat(600, 1200),
+        currentGold24: randomFloat(800, 1500),
+        currentUSD: randomFloat(5000, 10000),
+        currentSYP: randomFloat(80000, 150000),
+        priceGold14USD: randomFloat(50, 60),
+        priceGold18USD: randomFloat(65, 75),
+        priceGold21USD: randomFloat(80, 90),
+        priceGold24USD: randomFloat(95, 105),
+        priceGold14SYP: randomFloat(700, 900),
+        priceGold18SYP: randomFloat(900, 1100),
+        priceGold21SYP: randomFloat(1100, 1400),
+        priceGold24SYP: randomFloat(1300, 1600),
+        exchangeRateUSDtoSYP: randomFloat(14, 16),
+        lastPriceUpdate: new Date(),
+        profitMarginGold14: randomFloat(3, 7),
+        profitMarginGold18: randomFloat(3, 7),
+        profitMarginGold21: randomFloat(3, 7),
+        profitMarginGold24: randomFloat(3, 7),
       },
     }),
   ])
@@ -202,7 +312,7 @@ async function main() {
   console.log(`✅ Created ${allUsers.length} total users (${storeOwners.length} store owners, 1 admin, ${additionalUsers.length} additional users)\n`)
 
   // --------------------------------------------------------
-  // 3. CREATE REPORTS WITH TRANSACTIONS
+  // 4. CREATE REPORTS WITH TRANSACTIONS
   // --------------------------------------------------------
   console.log('📊 Creating daily reports with transactions...')
 
@@ -222,27 +332,38 @@ async function main() {
   let totalExchanges = 0
 
   // Create reports for each active store for the last 30 days
-  for (const store of stores.filter(s => s.status === 'ACTIVE')) {
+  for (let storeIndex = 0; storeIndex < stores.length; storeIndex++) {
+    const store = stores[storeIndex]
+    
+    if (store.status !== 'ACTIVE') continue
+
     console.log(`  📈 Processing store: ${store.name}`)
+
+    // Track balances throughout the period
+    let runningUSD = store.currentUSD
+    let runningSYP = store.currentSYP
+    let runningGold14 = store.currentGold14
+    let runningGold18 = store.currentGold18
+    let runningGold21 = store.currentGold21
+    let runningGold24 = store.currentGold24
 
     for (let daysAgo = 29; daysAgo >= 0; daysAgo--) {
       const reportDate = pastDate(daysAgo)
 
-      // Gold prices (fluctuate slightly)
+      // Gold prices (fluctuate slightly day by day)
       const goldPrice14 = randomFloat(50, 60)
       const goldPrice18 = randomFloat(65, 75)
       const goldPrice21 = randomFloat(80, 90)
       const goldPrice24 = randomFloat(95, 105)
       const dollarRate = randomFloat(14, 16)
 
-      // Opening balances (use previous day's closing or default for first day)
-      const isFirstDay = daysAgo === 29
-      const openingUSD = isFirstDay ? randomFloat(5000, 10000) : randomFloat(8000, 12000)
-      const openingSYP = isFirstDay ? randomFloat(80000, 150000) : randomFloat(100000, 200000)
-      const openingGold14 = isFirstDay ? randomFloat(500, 1000) : randomFloat(400, 800)
-      const openingGold18 = isFirstDay ? randomFloat(400, 800) : randomFloat(300, 700)
-      const openingGold21 = isFirstDay ? randomFloat(600, 1200) : randomFloat(500, 1000)
-      const openingGold24 = isFirstDay ? randomFloat(800, 1500) : randomFloat(700, 1300)
+      // Opening balances are previous day's closing or initial values
+      const openingUSD = runningUSD
+      const openingSYP = runningSYP
+      const openingGold14 = runningGold14
+      const openingGold18 = runningGold18
+      const openingGold21 = runningGold21
+      const openingGold24 = runningGold24
 
       // Create report
       const report = await prisma.report.create({
@@ -266,6 +387,14 @@ async function main() {
 
       totalReports++
 
+      // Track gold balances
+      const goldBalances = {
+        GOLD_14: openingGold14,
+        GOLD_18: openingGold18,
+        GOLD_21: openingGold21,
+        GOLD_24: openingGold24,
+      }
+
       // Generate 3-10 sales per day
       const numSales = Math.floor(Math.random() * 8) + 3
       const sales = []
@@ -275,36 +404,64 @@ async function main() {
         const weight = randomFloat(5, 50, 2)
 
         // Price per gram based on gold type
-        let pricePerGram: number
+        let pricePerGramUSD: number
+        let costPricePerGram: number
+        let profitMargin: number
+
         switch (goldType) {
           case 'GOLD_14':
-            pricePerGram = goldPrice14 + randomFloat(-2, 2)
+            costPricePerGram = goldPrice14
+            profitMargin = store.profitMarginGold14
+            pricePerGramUSD = costPricePerGram * (1 + profitMargin / 100)
             break
           case 'GOLD_18':
-            pricePerGram = goldPrice18 + randomFloat(-2, 2)
+            costPricePerGram = goldPrice18
+            profitMargin = store.profitMarginGold18
+            pricePerGramUSD = costPricePerGram * (1 + profitMargin / 100)
             break
           case 'GOLD_21':
-            pricePerGram = goldPrice21 + randomFloat(-2, 2)
+            costPricePerGram = goldPrice21
+            profitMargin = store.profitMarginGold21
+            pricePerGramUSD = costPricePerGram * (1 + profitMargin / 100)
             break
           case 'GOLD_24':
-            pricePerGram = goldPrice24 + randomFloat(-2, 2)
+            costPricePerGram = goldPrice24
+            profitMargin = store.profitMarginGold24
+            pricePerGramUSD = costPricePerGram * (1 + profitMargin / 100)
             break
         }
 
+        const pricePerGramSYP = pricePerGramUSD * dollarRate
         const currency = randomItem(currencies)
-        const total = weight * pricePerGram
+        
+        const totalUSD = weight * pricePerGramUSD
+        const totalSYP = weight * pricePerGramSYP
+        const amountPaid = currency === 'USD' ? totalUSD : totalSYP
+
+        const costPriceUSD = weight * costPricePerGram
+        const profitUSD = totalUSD - costPriceUSD
+        const profitSYP = profitUSD * dollarRate
 
         const sale = await prisma.sale.create({
           data: {
+            invoiceNumber: generateInvoiceNumber(storeIndex),
             date: new Date(reportDate.getTime() + Math.random() * 86400000), // Random time within day
             weight,
             goldType,
-            pricePerGram,
-            total,
+            pricePerGramUSD,
+            pricePerGramSYP,
+            totalUSD,
+            totalSYP,
             currency,
-            customerName: Math.random() > 0.3 ? faker.person.fullName() : null,
-            description: Math.random() > 0.5 ? faker.commerce.productDescription() : null,
             paymentType: randomItem(paymentTypes),
+            amountPaid,
+            customerName: Math.random() > 0.3 ? faker.person.fullName() : null,
+            customerPhone: Math.random() > 0.5 ? faker.phone.number() : null,
+            description: Math.random() > 0.5 ? faker.commerce.productDescription() : null,
+            costPriceUSD,
+            profitUSD,
+            profitSYP,
+            profitMargin,
             storeId: store.id,
             reportId: report.id,
           },
@@ -312,6 +469,14 @@ async function main() {
 
         sales.push(sale)
         totalSales++
+
+        // Update running balances
+        goldBalances[goldType] -= weight
+        if (currency === 'USD') {
+          runningUSD += totalUSD
+        } else {
+          runningSYP += totalSYP
+        }
       }
 
       // Generate 2-5 stock movements per day
@@ -322,12 +487,34 @@ async function main() {
         const type = randomItem<'ADD' | 'REMOVE'>(['ADD', 'REMOVE'])
         const quantity = randomFloat(10, 100, 2)
 
+        // Cost tracking for purchases (ADD operations)
+        const costPerGramUSD = type === 'ADD' ? randomFloat(45, 100) : null
+        const totalCostUSD = costPerGramUSD ? quantity * costPerGramUSD : null
+        const totalCostSYP = totalCostUSD ? totalCostUSD * dollarRate : null
+
+        // Update balance
+        if (type === 'ADD') {
+          goldBalances[goldType] += quantity
+          // Deduct cost from cash
+          if (totalCostUSD) {
+            runningUSD -= totalCostUSD
+          }
+        } else {
+          goldBalances[goldType] -= quantity
+        }
+
         await prisma.stock.create({
           data: {
             date: new Date(reportDate.getTime() + Math.random() * 86400000),
             goldType,
             type,
             quantity,
+            balanceAfter: goldBalances[goldType],
+            costPerGramUSD,
+            totalCostUSD,
+            totalCostSYP,
+            supplier: type === 'ADD' && Math.random() > 0.5 ? faker.company.name() : null,
+            invoiceRef: type === 'ADD' && Math.random() > 0.5 ? `SUP-${faker.string.alphanumeric(6).toUpperCase()}` : null,
             note: Math.random() > 0.5 ? faker.lorem.sentence() : null,
             storeId: store.id,
             reportId: report.id,
@@ -344,8 +531,17 @@ async function main() {
         const fromCurrency = randomItem(currencies)
         const toCurrency = fromCurrency === 'USD' ? 'SYP' : 'USD'
         const amountFrom = randomFloat(100, 2000, 2)
-        const rate = fromCurrency === 'USD' ? dollarRate : 1 / dollarRate
-        const amountTo = amountFrom * rate
+        const exchangeRate = dollarRate
+        const amountTo = fromCurrency === 'USD' ? amountFrom * exchangeRate : amountFrom / exchangeRate
+
+        // Update running balances
+        if (fromCurrency === 'USD') {
+          runningUSD -= amountFrom
+          runningSYP += amountTo
+        } else {
+          runningSYP -= amountFrom
+          runningUSD += amountTo
+        }
 
         await prisma.exchange.create({
           data: {
@@ -354,7 +550,9 @@ async function main() {
             toCurrency,
             amountFrom,
             amountTo,
-            rate,
+            exchangeRate,
+            balanceUSDAfter: runningUSD,
+            balanceSYPAfter: runningSYP,
             storeId: store.id,
             reportId: report.id,
           },
@@ -363,29 +561,19 @@ async function main() {
         totalExchanges++
       }
 
+      // Update gold balances from the tracking object
+      runningGold14 = goldBalances.GOLD_14
+      runningGold18 = goldBalances.GOLD_18
+      runningGold21 = goldBalances.GOLD_21
+      runningGold24 = goldBalances.GOLD_24
+
       // Calculate totals for closed reports
       if (daysAgo !== 0) {
         const totalGoldSold = sales.reduce((sum: number, sale: any) => sum + sale.weight, 0)
-        const totalSalesUSD = sales
-          .filter((s: any) => s.currency === 'USD')
-          .reduce((sum: number, sale: any) => sum + sale.total, 0)
-        const totalSalesSYP = sales
-          .filter((s: any) => s.currency === 'SYP')
-          .reduce((sum: number, sale: any) => sum + sale.total, 0)
-
-        // Calculate closing balances (simplified)
-        const closingUSD = openingUSD + totalSalesUSD + randomFloat(-500, 500)
-        const closingSYP = openingSYP + totalSalesSYP + randomFloat(-10000, 10000)
-
-        // Gold sold reduces closing
-        const closingGold14 = openingGold14 - randomFloat(10, 50)
-        const closingGold18 = openingGold18 - randomFloat(10, 50)
-        const closingGold21 = openingGold21 - randomFloat(10, 50)
-        const closingGold24 = openingGold24 - randomFloat(10, 50)
-
-        // Calculate profit (10-20% of sales)
-        const profitUSD = totalSalesUSD * randomFloat(0.1, 0.2)
-        const profitSYP = totalSalesSYP * randomFloat(0.1, 0.2)
+        const totalSalesUSD = sales.reduce((sum: number, sale: any) => sum + sale.totalUSD, 0)
+        const totalSalesSYP = sales.reduce((sum: number, sale: any) => sum + sale.totalSYP, 0)
+        const profitUSD = sales.reduce((sum: number, sale: any) => sum + sale.profitUSD, 0)
+        const profitSYP = sales.reduce((sum: number, sale: any) => sum + sale.profitSYP, 0)
 
         await prisma.report.update({
           where: { id: report.id },
@@ -393,12 +581,12 @@ async function main() {
             totalGoldSold,
             totalSalesUSD,
             totalSalesSYP,
-            closingUSD,
-            closingSYP,
-            closingGold14: Math.max(0, closingGold14),
-            closingGold18: Math.max(0, closingGold18),
-            closingGold21: Math.max(0, closingGold21),
-            closingGold24: Math.max(0, closingGold24),
+            closingUSD: runningUSD,
+            closingSYP: runningSYP,
+            closingGold14: Math.max(0, runningGold14),
+            closingGold18: Math.max(0, runningGold18),
+            closingGold21: Math.max(0, runningGold21),
+            closingGold24: Math.max(0, runningGold24),
             profitUSD,
             profitSYP,
             notes: Math.random() > 0.7 ? faker.lorem.sentence() : null,
