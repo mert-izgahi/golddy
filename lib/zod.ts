@@ -1,6 +1,6 @@
 // lib/zod.ts
 import { z } from "zod";
-import { CurrencyType, GoldType, PaymentType } from "./generated/prisma";
+import { CurrencyType, GoldType, PaymentType,StockType, } from "./generated/prisma";
 
 // ✅ Sign-in schema
 export const getSignInSchema = (lang: "en" | "ar") => {
@@ -111,6 +111,67 @@ export const getUpdateSaleSchema = (lang: "en" | "ar") => {
     });
 };
 
+
+// ✅ Create Stock schema
+export const getCreateStockSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+    const positiveMessage =
+        lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
+    const invalidGoldType =
+        lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
+    const invalidStockType =
+        lang === "en" ? "Invalid stock type" : "نوع حركة المخزون غير صالح";
+
+    return z.object({
+        date: z.coerce.date().optional(),
+        quantity: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+        goldType: z
+            .enum(GoldType, requiredMessage)
+            .refine((val) => Object.values(GoldType).includes(val), {
+                message: invalidGoldType,
+            }),
+        type: z
+            .enum(StockType, requiredMessage)
+            .refine((val) => Object.values(StockType).includes(val), {
+                message: invalidStockType,
+            }),
+        note: z.string().optional(),
+    });
+};
+
+// ✅ Update Stock schema (all optional)
+export const getUpdateStockSchema = (lang: "en" | "ar") => {
+    const positiveMessage =
+        lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
+    const invalidGoldType =
+        lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
+    const invalidStockType =
+        lang === "en" ? "Invalid stock type" : "نوع حركة المخزون غير صالح";
+
+    return z.object({
+        date: z.coerce.date().optional(),
+        quantity: z.number().positive(positiveMessage).optional(),
+        goldType: z
+            .enum(GoldType)
+            .refine((val) => Object.values(GoldType).includes(val), {
+                message: invalidGoldType,
+            })
+            .optional(),
+        type: z
+            .enum(StockType)
+            .refine((val) => Object.values(StockType).includes(val), {
+                message: invalidStockType,
+            })
+            .optional(),
+        note: z.string().optional(),
+    });
+};
+
 // ✅ Export inferred types
 export type CreateSaleInput = z.infer<ReturnType<typeof getCreateSaleSchema>>;
 export type UpdateSaleInput = z.infer<ReturnType<typeof getUpdateSaleSchema>>;
+export type CreateStockInput = z.infer<ReturnType<typeof getCreateStockSchema>>;
+export type UpdateStockInput = z.infer<ReturnType<typeof getUpdateStockSchema>>;

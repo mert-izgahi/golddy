@@ -9,11 +9,11 @@ import { useGetSalesByStore, useDeleteSale } from '@/hooks/use-sales';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import dayjs from 'dayjs';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Sale } from '@/lib/generated/prisma/client';
+import { formatCurrency, formatDate, getPaymentTypeLabel } from '@/lib/utils';
 
 interface Props {
     storeId: string
@@ -41,9 +41,6 @@ function SalesPage({ storeId }: Props) {
         }
     };
 
-    const formatCurrency = (amount: number, currency: string) => {
-        return `${amount.toLocaleString()} ${currency}`;
-    };
 
     const getGoldTypeLabel = (goldType: string) => {
         const labels = {
@@ -55,14 +52,14 @@ function SalesPage({ storeId }: Props) {
         return labels[goldType as keyof typeof labels] || goldType;
     };
 
-    const getPaymentTypeLabel = (paymentType: string) => {
-        const labels = {
-            CASH: lang === "en" ? "Cash" : "نقدي",
-            TRANSFER: lang === "en" ? "Transfer" : "تحويل شام كاش",
-            OTHER: lang === "en" ? "Other" : "أخرى"
-        };
-        return labels[paymentType as keyof typeof labels] || paymentType;
-    };
+    // const getPaymentTypeLabel = (paymentType: string) => {
+    //     const labels = {
+    //         CASH: lang === "en" ? "Cash" : "نقدي",
+    //         TRANSFER: lang === "en" ? "Transfer" : "تحويل شام كاش",
+    //         OTHER: lang === "en" ? "Other" : "أخرى"
+    //     };
+    //     return labels[paymentType as keyof typeof labels] || paymentType;
+    // };
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
@@ -79,7 +76,7 @@ function SalesPage({ storeId }: Props) {
             accessorKey: "date",
             header: lang === "en" ? "Date" : "التاريخ",
             cell: ({ row }) => {
-                return dayjs(row.getValue("date")).format('DD/MM/YYYY');
+                return formatDate(row.getValue("date"), lang);
             },
         },
         {
@@ -112,7 +109,7 @@ function SalesPage({ storeId }: Props) {
             accessorKey: "pricePerGram",
             header: lang === "en" ? "Price/gram" : "السعر/جرام",
             cell: ({ row }) => {
-                return formatCurrency(row.getValue("pricePerGram"), row.original.currency);
+                return formatCurrency(row.getValue("pricePerGram"), row.original.currency, lang);
             },
         },
         {
@@ -121,7 +118,7 @@ function SalesPage({ storeId }: Props) {
             cell: ({ row }) => {
                 return (
                     <span className="font-medium">
-                        {formatCurrency(row.getValue("total"), row.original.currency)}
+                        {formatCurrency(row.getValue("total"), row.original.currency, lang)}
                     </span>
                 );
             },
@@ -132,7 +129,7 @@ function SalesPage({ storeId }: Props) {
             cell: ({ row }) => {
                 return (
                     <Badge variant="outline">
-                        {getPaymentTypeLabel(row.getValue("paymentType"))}
+                        {getPaymentTypeLabel(row.getValue("paymentType"), lang)}
                     </Badge>
                 );
             },

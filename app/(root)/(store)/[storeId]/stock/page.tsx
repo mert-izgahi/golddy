@@ -1,8 +1,15 @@
-import React from 'react'
+// app/(root)/(store)/[storeId]/stock/page.tsx
+import StockPage from './client'
 
-function page() {
+interface Props {
+  params: Promise<{ storeId: string }>
+}
+
+async function page({ params }: Props) {
+  const { storeId } = await params
+
   return (
-    <div>page</div>
+    <StockPage storeId={storeId} />
   )
 }
 
