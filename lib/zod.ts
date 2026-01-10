@@ -234,7 +234,8 @@ export const getUserSchema = (lang: "en" | "ar") => {
 
         password: z
             .string(requiredMessage)
-            .min(6, shortPasswordMessage),
+            .min(6, shortPasswordMessage)
+            .optional(), // Make password optional for updates
 
         name: z
             .string()
@@ -249,13 +250,11 @@ export const getUserSchema = (lang: "en" | "ar") => {
                         ? "Invalid phone number"
                         : "رقم الهاتف غير صالح",
             })
-            .optional(),
+            .optional()
+            .or(z.literal("")), // Allow empty string
 
         role: z
-            .enum(Role, lang === "en"
-                ? "Role is required"
-                : "الدور مطلوب",)
-            .default(Role.STORE),
+            .enum(Role, lang === "en" ? "Role is required" : "الدور مطلوب")
     });
 };
 

@@ -10,6 +10,7 @@ import { storesRoutes } from '@/routes/stores.routes';
 import { salesRoutes } from '@/routes/sales.routes';
 import { stockRoutes } from '@/routes/stock.routes';
 import { settingsRoutes } from '@/routes/settings.routes';
+import { usersRoutes } from '@/routes/users.routes';
 
 declare module "hono" {
     interface ContextVariableMap {
@@ -31,6 +32,7 @@ app.route('/stores', storesRoutes);
 app.route('/sales', salesRoutes);
 app.route('/stock', stockRoutes);
 app.route('/settings',settingsRoutes);
+app.route('/users', usersRoutes);
 // Not found
 app.notFound((c) =>
     c.json(

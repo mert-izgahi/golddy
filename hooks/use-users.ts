@@ -13,7 +13,62 @@ interface GetUsersParams extends QueryParams {
 interface PaginatedUsersResponse extends ApiResponseWithPagination<User> { };
 
 
-// Hook for managing users
+// Hook to get all users with pagination (following sales pattern)
+export const useGetUsers = (page: number = 1, limit: number = 10) => {
+    return useQuery<ApiResponseWithPagination<User>>({
+        queryKey: ['get-users', page, limit],
+        queryFn: async () => {
+            const response = await apiClient.get<ApiResponseWithPagination<User>>(
+                `/users?page=${page}&limit=${limit}`
+            );
+            return response.data;
+        },
+    });
+};
+
+// Hook to get a single user by ID (following sales pattern)
+export const useGetUserById = (userId: string) => {
+    return useQuery<User>({
+        queryKey: ['get-user-by-id', userId],
+        queryFn: async () => {
+            const response = await apiClient.get<ApiResponse<User>>(`/users/${userId}`);
+            return response.data.result;
+        },
+        enabled: !!userId,
+    });
+};
+
+// Hook to create a new user (following sales pattern)
+export const useCreateUser = () => {
+    return useMutation({
+        mutationFn: async (data: UserInput) => {
+            const response = await apiClient.post<ApiResponse<User>>(`/users`, data);
+            return response.data.result;
+        },
+    });
+};
+
+// Hook to update a user (following sales pattern)
+export const useUpdateUser = () => {
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: Partial<UserInput> }) => {
+            const response = await apiClient.put<ApiResponse<User>>(`/users/${id}`, data);
+            return response.data.result;
+        },
+    });
+};
+
+// Hook to delete a user (following sales pattern)
+export const useDeleteUser = () => {
+    return useMutation({
+        mutationFn: async (userId: string) => {
+            const response = await apiClient.delete<ApiResponse<null>>(`/users/${userId}`);
+            return response.data;
+        },
+    });
+};
+
+// Hook for managing users (existing functionality)
 export const useUsers = () => {
     const queryClient = useQueryClient();
 

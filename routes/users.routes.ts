@@ -168,7 +168,7 @@ usersRoutes.post(
             }
 
             // Hash the password before saving
-            const hashedPassword = await hashPassword(data.password);
+            const hashedPassword = await hashPassword(data.password!);
 
             const user = await prisma.user.create({
                 data: {
