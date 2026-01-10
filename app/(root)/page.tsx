@@ -1,7 +1,7 @@
 import { getAuthUser } from '@/lib/actions'
+import { Role } from '@/lib/generated/prisma';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import React from 'react'
 
 async function page() {
   const user = await getAuthUser();
@@ -10,11 +10,20 @@ async function page() {
     redirect('/auth/sign-in');
   }
 
+
+  const role = await user.role;
+
+  if (role === Role.ADMIN) {
+    redirect("/admin")
+  }
+
   const store = await prisma.store.findFirst({
     where: {
       ownerId: user.id
     }
-  })
+  });
+
+
 
   if (store) {
     redirect(`/${store.id}`)

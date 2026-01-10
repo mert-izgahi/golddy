@@ -1,8 +1,13 @@
 import React from 'react'
+import StoreDashboardPage from './client';
+interface Props {
+  params: Promise<{ storeId: string }>
+}
 
-function page() {
+async function page({ params }: Props) {
+  const { storeId } = await params;
   return (
-    <div>page</div>
+    <StoreDashboardPage storeId={storeId} />
   )
 }
 

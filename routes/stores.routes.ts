@@ -40,10 +40,6 @@ storesRoutes
         const store = await prisma.store.findUnique({
             where: { id },
         });
-
-        
-        
-
         if (!store) {
             return c.json({ message: "Store not found", result: null, success: false }, 404);
         }

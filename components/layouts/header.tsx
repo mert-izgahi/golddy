@@ -10,7 +10,6 @@ function Header({ store }: { store: Store }) {
     return (
         <header className='h-16 border-b flex flex-row items-center px-4'>
             <div className="flex items-center space-x-2">
-
                 <DateTimeArea />
             </div>
             <div className="ms-auto flex items-center space-x-4">
