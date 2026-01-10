@@ -1,8 +1,8 @@
 import prisma from "@/lib/prisma";
 import { Hono } from "hono";
-import { authenticate } from "@/lib/auth-middlewares";
+import { authenticate, authorize } from "@/lib/auth-middlewares";
 import { ContextUser } from "@/lib/types";
-
+import { Role } from "@/lib/generated/prisma";
 
 
 const storesRoutes = new Hono();
@@ -13,9 +13,33 @@ storesRoutes
     // @route   GET /stores
     // @access  Private
     // @method  Get
-    .get("/", authenticate, async (c) => {
-        const stores = await prisma.store.findMany();
-        return c.json({ message: "Stores fetched successfully", result: stores, success: true });
+    .get("/", authenticate, authorize([Role.ADMIN]), async (c) => {
+        const page = parseInt(c.req.query("page") || "1");
+        const limit = parseInt(c.req.query("limit") || "10");
+        const skip = (page - 1) * limit;
+        // Get total count for pagination
+        const total = await prisma.store.count();
+
+        const stores = await prisma.store.findMany({
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        });
+
+        const totalPages = Math.ceil(total / limit);
+
+        return c.json({
+            message: "Stores fetched successfully",
+            result: stores,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrevious: page > 1
+            }, success: true
+        });
     })
 
     // @desc    Get store by user ID
@@ -27,7 +51,6 @@ storesRoutes
         const store = await prisma.store.findFirst({
             where: { ownerId: userId },
         });
-
         return c.json({ message: "Store fetched successfully", result: store, success: true });
     })
 
@@ -66,7 +89,9 @@ storesRoutes
         });
 
         return c.json({ message: "Store created successfully", result: newStore, success: true }, 201);
-    });
+    })
+    
+    ;
 
 
 export { storesRoutes };
