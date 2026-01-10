@@ -171,6 +171,7 @@ export const getUpdateStockSchema = (lang: "en" | "ar") => {
 };
 
 // ✅ Export inferred types
+export type SignInInput = z.infer<ReturnType<typeof getSignInSchema>>;
 export type CreateSaleInput = z.infer<ReturnType<typeof getCreateSaleSchema>>;
 export type UpdateSaleInput = z.infer<ReturnType<typeof getUpdateSaleSchema>>;
 export type CreateStockInput = z.infer<ReturnType<typeof getCreateStockSchema>>;
