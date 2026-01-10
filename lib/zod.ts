@@ -1,6 +1,6 @@
 // lib/zod.ts
 import { z } from "zod";
-import { CurrencyType, GoldType, PaymentType, StockType, } from "./generated/prisma";
+import { CurrencyType, GoldType, PaymentType, Role, StockType, } from "./generated/prisma";
 import dayjs from "dayjs";
 
 // ✅ Sign-in schema
@@ -218,6 +218,47 @@ export const getUpdateSettingsSchema = (lang: "en" | "ar") => {
 };
 
 
+export const getUserSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+    const invalidEmailMessage =
+        lang === "en" ? "Invalid email address" : "عنوان البريد الإلكتروني غير صالح";
+    const shortPasswordMessage =
+        lang === "en"
+            ? "Password must be at least 6 characters"
+            : "يجب أن تكون كلمة المرور 6 أحرف على الأقل";
+
+    return z.object({
+        email: z
+            .email(invalidEmailMessage),
+
+        password: z
+            .string(requiredMessage)
+            .min(6, shortPasswordMessage),
+
+        name: z
+            .string()
+            .min(2, lang === "en" ? "Name is too short" : "الاسم قصير جدًا")
+            .optional(),
+
+        phoneNumber: z
+            .string()
+            .regex(/^\+?[0-9]{8,15}$/, {
+                message:
+                    lang === "en"
+                        ? "Invalid phone number"
+                        : "رقم الهاتف غير صالح",
+            })
+            .optional(),
+
+        role: z
+            .enum(Role, lang === "en"
+                ? "Role is required"
+                : "الدور مطلوب",)
+            .default(Role.STORE),
+    });
+};
+
 // ✅ Export inferred types
 export type SignInInput = z.infer<ReturnType<typeof getSignInSchema>>;
 export type CreateSaleInput = z.infer<ReturnType<typeof getCreateSaleSchema>>;
@@ -225,3 +266,4 @@ export type UpdateSaleInput = z.infer<ReturnType<typeof getUpdateSaleSchema>>;
 export type CreateStockInput = z.infer<ReturnType<typeof getCreateStockSchema>>;
 export type UpdateStockInput = z.infer<ReturnType<typeof getUpdateStockSchema>>;
 export type UpdateSettingsInput = z.infer<ReturnType<typeof getUpdateSettingsSchema>>;
+export type UserInput = z.infer<ReturnType<typeof getUserSchema>>;
