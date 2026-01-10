@@ -54,20 +54,6 @@ model Store {
   currentUSD Float @default(0)
   currentSYP Float @default(0)
 
-  // Current Gold Prices (per gram) - Updated from API
-  priceGold14USD Float @default(0)
-  priceGold18USD Float @default(0)
-  priceGold21USD Float @default(0)
-  priceGold24USD Float @default(0)
-
-  priceGold14SYP Float @default(0)
-  priceGold18SYP Float @default(0)
-  priceGold21SYP Float @default(0)
-  priceGold24SYP Float @default(0)
-
-  // Current Exchange Rate
-  exchangeRateUSDtoSYP Float @default(0)
-
   // Last price update timestamp
   lastPriceUpdate DateTime?
 
@@ -234,6 +220,26 @@ model Report {
   sales     Sale[]
   stocks    Stock[]
   exchanges Exchange[]
+}
+
+model Settings {
+  id             String   @id @default(cuid())
+  date           DateTime @default(now())
+  priceGold14USD Float    @default(0)
+  priceGold18USD Float    @default(0)
+  priceGold21USD Float    @default(0)
+  priceGold24USD Float    @default(0)
+
+  priceGold14SYP Float @default(0)
+  priceGold18SYP Float @default(0)
+  priceGold21SYP Float @default(0)
+  priceGold24SYP Float @default(0)
+
+  // Current Exchange Rate
+  exchangeRateUSDtoSYP Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // --------------------------------------------------------

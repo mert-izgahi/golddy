@@ -6,16 +6,21 @@ import { Separator } from "@/components/ui/separator";
 import { TrendingUp, TrendingDown, DollarSign, Coins, Warehouse, Percent } from "lucide-react";
 import { useLangStore } from '@/store/lang-store';
 import { formatDate } from '@/lib/utils';
+import { GoldPriceService } from '@/services/gold-price.service';
 
 interface Props {
     storeId: string
 }
 
 function StoreDashboardPage({ storeId }: Props) {
-    const { data: store, isPending } = useGetStoreById(storeId);
+    const { data: store, isLoading } = useGetStoreById(storeId);
     const { lang } = useLangStore();
 
-
+    
+    
+    if(isLoading){
+        return <>Loading ...</>
+    }
 
     // Calculate total gold value in USD
     const totalGoldValueUSD =

@@ -1,5 +1,5 @@
-import React from 'react'
 import StoreDashboardPage from './client';
+
 interface Props {
   params: Promise<{ storeId: string }>
 }

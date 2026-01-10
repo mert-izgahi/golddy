@@ -1,126 +1,149 @@
-// lib/services/gold-price.service.ts
 import prisma from "@/lib/prisma";
 
 /**
  * Gold Price Service
- * Fetches current gold prices from external API and updates store prices
+ * Fetches live gold prices (USD) from GoldAPI.io and USD→SYP rate from CurrencyAPI.
+ * Updates store prices accordingly.
  */
 
-interface GoldPriceAPIResponse {
-    gold24k: number; // Price per gram in USD
+interface GoldAPIResponse {
+    price: number; // price per ounce in USD
     timestamp: number;
 }
 
-interface ExchangeRateAPIResponse {
-    rates: {
-        SYP: number; // USD to SYP rate
+interface CurrencyAPIResponse {
+    data: {
+        SYP?: {
+            code: string;
+            value: number;
+        };
     };
 }
 
 export class GoldPriceService {
-
     /**
-     * Fetch current gold price from API
-     * Using metals-api.com or similar service
+     * Fetch 24K gold price (USD/gram) from GoldAPI.io
      */
     static async fetchGoldPriceUSD(): Promise<number> {
         try {
-            // Option 1: Using metals-api.com (requires API key)
-            // const API_KEY = process.env.METALS_API_KEY;
-            // const response = await fetch(`https://metals-api.com/api/latest?access_key=${API_KEY}&base=USD&symbols=XAU`);
+            const API_KEY = process.env.GOLD_API_KEY || "goldapi-3km5qxsmk8cl3p8-io";
 
-            // Option 2: Using goldapi.io
-            // const response = await fetch('https://www.goldapi.io/api/XAU/USD', {
-            //   headers: { 'x-access-token': process.env.GOLD_API_KEY }
-            // });
+            const res = await fetch("https://www.goldapi.io/api/XAU/USD", {
+                headers: {
+                    "x-access-token": API_KEY,
+                    "Content-Type": "application/json",
+                },
+                cache: "no-store",
+            });
 
-            // Option 3: Free alternative - gold-price.live (no auth required)
-            const response = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch gold price');
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("❌ GoldAPI error:", errText);
+                throw new Error("Failed to fetch gold price from GoldAPI.io");
             }
 
-            const data = await response.json();
+            const data: GoldAPIResponse = await res.json();
 
-            // Convert from troy ounce to gram
-            // 1 troy ounce = 31.1035 grams
-            const pricePerTroyOunce = parseFloat(data.items[0].xauPrice);
-            const pricePerGram = pricePerTroyOunce / 31.1035;
+            // Convert ounce → gram
+            const pricePerOunce = data.price;
+            const pricePerGram = pricePerOunce / 31.1035;
 
+            console.log("🟡 Gold price (24K, USD/g):", pricePerGram);
             return pricePerGram;
-
         } catch (error) {
-            console.error('Error fetching gold price:', error);
-
-            // Fallback to a default price or throw error
-            // For production, you might want to use the last known price
-            throw new Error('Unable to fetch current gold price');
+            console.error("Error fetching gold price:", error);
+            throw new Error("Unable to fetch current gold price");
         }
     }
 
     /**
-     * Fetch USD to SYP exchange rate
+     * Fetch USD → SYP exchange rate using CurrencyAPI
      */
     static async fetchExchangeRate(): Promise<number> {
         try {
-            // Option 1: Using exchangerate-api.com (free tier available)
-            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            const API_KEY = process.env.CURRENCY_API_KEY;
+            if (!API_KEY) throw new Error("Missing CURRENCY_API_KEY");
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch exchange rate');
+            //const url = `https://currencyapi.com/api/v3/latest?apikey=num_live_J4fu5wohPql6kFwfmh9C8M5JQYntd8IJMu2OC9k0&base_currency=USD&currencies=SYP`;
+            const url = `https://currencyapi.com/api/v3/latest?apikey=${API_KEY}&base_currency=USD&currencies=SYP`;
+            const res = await fetch(url, { cache: "no-store" });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("❌ CurrencyAPI error:", errText);
+                throw new Error("FX API failed");
             }
 
-            const data: ExchangeRateAPIResponse = await response.json();
-            return data.rates.SYP;
+            const data: CurrencyAPIResponse = await res.json();
+            const rate = data.data?.SYP?.value;
 
+            // Check if value is realistic
+            if (!rate ) {
+                console.warn("⚠️ Invalid SYP rate returned. Using fallback 12000.");
+                return 12000;
+            }
+
+            console.log("💵 Exchange rate (USD→SYP):", rate);
+            return rate;
         } catch (error) {
-            console.error('Error fetching exchange rate:', error);
-
-            // Fallback to a default rate or last known rate
-            // For SYP, you might want to use a fixed rate due to currency controls
-            return 15000; // Default fallback rate
+            console.error("Error fetching exchange rate:", error);
+            return 12000; // fallback realistic default
         }
     }
+    // static async fetchExchangeRate(): Promise<number> {
+    //     try {
+    //         const url = `https://open.exchangerate-api.com/v6/latest/USD`;
+    //         const res = await fetch(url, { cache: "no-store" });
+
+    //         if (!res.ok) {
+    //             console.error("❌ ExchangeRate API error");
+    //             return 12000; // fallback
+    //         }
+
+    //         const data = await res.json();
+    //         const rate = data.rates?.SYP;
+
+    //         if (!rate || rate < 1000) {
+    //             console.warn("⚠️ Invalid SYP rate returned. Using fallback 12000.");
+    //             return 12000;
+    //         }
+
+    //         console.log("💵 Exchange rate (USD→SYP):", rate);
+    //         return rate;
+    //     } catch (error) {
+    //         console.error("Error fetching exchange rate:", error);
+    //         return 12000; // fallback
+    //     }
+    // }
 
     /**
-     * Calculate gold prices for different karats
+     * Compute gold prices for different karats
      */
-    static calculateKaratPrices(gold24Price: number): {
-        gold14: number;
-        gold18: number;
-        gold21: number;
-        gold24: number;
-    } {
-        // Gold purity percentages
+    static calculateKaratPrices(gold24: number) {
         const purity = {
-            gold14: 14 / 24, // 58.33%
-            gold18: 18 / 24, // 75%
-            gold21: 21 / 24, // 87.5%
-            gold24: 1,       // 100%
+            gold14: 14 / 24,
+            gold18: 18 / 24,
+            gold21: 21 / 24,
+            gold24: 1,
         };
 
         return {
-            gold14: gold24Price * purity.gold14,
-            gold18: gold24Price * purity.gold18,
-            gold21: gold24Price * purity.gold21,
-            gold24: gold24Price,
+            gold14: gold24 * purity.gold14,
+            gold18: gold24 * purity.gold18,
+            gold21: gold24 * purity.gold21,
+            gold24,
         };
     }
 
     /**
-     * Update store prices from API
+     * Update store prices (USD + SYP) based on current API data
      */
     static async updateStorePrices(storeId: string): Promise<void> {
         try {
-            // Fetch current prices
             const gold24PriceUSD = await this.fetchGoldPriceUSD();
             const exchangeRate = await this.fetchExchangeRate();
 
-            // Calculate prices for all karats
             const pricesUSD = this.calculateKaratPrices(gold24PriceUSD);
-
-            // Calculate prices in SYP
             const pricesSYP = {
                 gold14: pricesUSD.gold14 * exchangeRate,
                 gold18: pricesUSD.gold18 * exchangeRate,
@@ -128,7 +151,6 @@ export class GoldPriceService {
                 gold24: pricesUSD.gold24 * exchangeRate,
             };
 
-            // Get store to apply profit margins
             const store = await prisma.store.findUnique({
                 where: { id: storeId },
                 select: {
@@ -139,24 +161,21 @@ export class GoldPriceService {
                 },
             });
 
-            if (!store) {
-                throw new Error('Store not found');
-            }
+            if (!store) throw new Error("Store not found");
 
-            // Apply profit margins
-            const applyMargin = (price: number, margin: number) => {
-                return price * (1 + margin / 100);
-            };
+            const applyMargin = (price: number, margin: number) =>
+                price * (1 + margin / 100);
 
-            // Update store prices
             await prisma.store.update({
                 where: { id: storeId },
                 data: {
+                    // USD prices
                     priceGold14USD: applyMargin(pricesUSD.gold14, store.profitMarginGold14),
                     priceGold18USD: applyMargin(pricesUSD.gold18, store.profitMarginGold18),
                     priceGold21USD: applyMargin(pricesUSD.gold21, store.profitMarginGold21),
                     priceGold24USD: applyMargin(pricesUSD.gold24, store.profitMarginGold24),
 
+                    // SYP prices
                     priceGold14SYP: applyMargin(pricesSYP.gold14, store.profitMarginGold14),
                     priceGold18SYP: applyMargin(pricesSYP.gold18, store.profitMarginGold18),
                     priceGold21SYP: applyMargin(pricesSYP.gold21, store.profitMarginGold21),
@@ -167,84 +186,44 @@ export class GoldPriceService {
                 },
             });
 
-            // Save price history
-            //   await prisma.goldPriceHistory.create({
-            //     data: {
-            //       storeId,
-            //       gold14USD: pricesUSD.gold14,
-            //       gold18USD: pricesUSD.gold18,
-            //       gold21USD: pricesUSD.gold21,
-            //       gold24USD: pricesUSD.gold24,
-            //       gold14SYP: pricesSYP.gold14,
-            //       gold18SYP: pricesSYP.gold18,
-            //       gold21SYP: pricesSYP.gold21,
-            //       gold24SYP: pricesSYP.gold24,
-            //       exchangeRate,
-            //       source: 'goldprice.org',
-            //     },
-            //   });
-
+            console.log(`✅ Store ${storeId} prices updated successfully`);
         } catch (error) {
-            console.error('Error updating store prices:', error);
+            console.error("Error updating store prices:", error);
             throw error;
         }
     }
 
     /**
-     * Get current store prices with freshness check
-     * Auto-updates if prices are stale (older than 1 hour)
+     * Get store prices, refreshing if older than 1 hour
      */
-    static async getCurrentPrices(storeId: string): Promise<{
-        pricesUSD: {
-            gold14: number;
-            gold18: number;
-            gold21: number;
-            gold24: number;
-        };
-        pricesSYP: {
-            gold14: number;
-            gold18: number;
-            gold21: number;
-            gold24: number;
-        };
-        exchangeRate: number;
-        lastUpdate: Date;
-    }> {
-        const store = await prisma.store.findUnique({
-            where: { id: storeId },
-        });
+    static async getCurrentPrices(storeId: string) {
+        const store = await prisma.store.findUnique({ where: { id: storeId } });
+        if (!store) throw new Error("Store not found");
 
-        if (!store) {
-            throw new Error('Store not found');
-        }
-
-        // Check if prices need updating (older than 1 hour)
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-        const needsUpdate = !store.lastPriceUpdate || store.lastPriceUpdate < oneHourAgo;
+        const needsUpdate =
+            !store.lastPriceUpdate || store.lastPriceUpdate < oneHourAgo;
 
         if (needsUpdate) {
             await this.updateStorePrices(storeId);
-
-            // Fetch updated store
-            const updatedStore = await prisma.store.findUnique({
-                where: { id: storeId },
-            });
+            const updated = await prisma.store.findUnique({ where: { id: storeId } });
+            if (!updated) throw new Error("Store not found after update");
 
             return {
                 pricesUSD: {
-                    gold14: updatedStore!.priceGold14USD,
-                    gold18: updatedStore!.priceGold18USD,
-                    gold21: updatedStore!.priceGold21USD,
-                    gold24: updatedStore!.priceGold24USD,
+                    gold14: updated.priceGold14USD,
+                    gold18: updated.priceGold18USD,
+                    gold21: updated.priceGold21USD,
+                    gold24: updated.priceGold24USD,
                 },
                 pricesSYP: {
-                    gold14: updatedStore!.priceGold14SYP,
-                    gold18: updatedStore!.priceGold18SYP,
-                    gold21: updatedStore!.priceGold21SYP,
-                    gold24: updatedStore!.priceGold24SYP,
+                    gold14: updated.priceGold14SYP,
+                    gold18: updated.priceGold18SYP,
+                    gold21: updated.priceGold21SYP,
+                    gold24: updated.priceGold24SYP,
                 },
-                exchangeRate: updatedStore!.exchangeRateUSDtoSYP,
-                lastUpdate: updatedStore!.lastPriceUpdate!,
+                exchangeRate: updated.exchangeRateUSDtoSYP,
+                lastUpdate: updated.lastPriceUpdate!,
             };
         }
 
