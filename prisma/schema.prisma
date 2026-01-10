@@ -54,16 +54,6 @@ model Store {
   currentUSD Float @default(0)
   currentSYP Float @default(0)
 
-  // Last price update timestamp
-  lastPriceUpdate DateTime?
-  
-  
-  // Profit margins (percentage)
-  profitMarginGold14 Float @default(5)
-  profitMarginGold18 Float @default(5)
-  profitMarginGold21 Float @default(5)
-  profitMarginGold24 Float @default(5)
-
   // Relations
   owner     User       @relation(fields: [ownerId], references: [id])
   ownerId   String
@@ -78,11 +68,11 @@ model Store {
 // --------------------------------------------------------
 // Represents each gold sale operation (by gram)
 model Sale {
-  id            String   @id @default(cuid())
-  invoiceNumber String   @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  date          DateTime @default(now())
+  id            String @id @default(cuid())
+  invoiceNumber String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Gold Details
   weight          Float
@@ -116,7 +106,7 @@ model Sale {
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
 
-  @@index([storeId, date])
+  @@index([storeId, createdAt])
   @@index([invoiceNumber])
   @@index([reportId])
 }
@@ -126,8 +116,11 @@ model Sale {
 // --------------------------------------------------------
 // Tracks gold stock movements (add/remove)
 model Stock {
-  id       String    @id @default(cuid())
-  date     DateTime  @default(now())
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   goldType GoldType
   quantity Float // In grams (positive for ADD, stored as-is)
   type     StockType // ADD or REMOVE
@@ -150,7 +143,7 @@ model Stock {
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
 
-  @@index([storeId, date])
+  @@index([storeId, createdAt])
   @@index([goldType])
   @@index([reportId])
 }
@@ -161,7 +154,9 @@ model Stock {
 // Currency exchange operations between USD and SYP
 model Exchange {
   id              String        @id @default(cuid())
-  date            DateTime      @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Exchange details (if type is EXCHANGE)
   fromCurrency    CurrencyType?
   toCurrency      CurrencyType?
@@ -178,7 +173,7 @@ model Exchange {
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
 
-  @@index([storeId, date])
+  @@index([storeId, createdAt])
   @@index([reportId])
 }
 
@@ -201,11 +196,22 @@ model Report {
   closingGold21 Float     @default(0)
   openingGold24 Float     @default(0)
   closingGold24 Float     @default(0)
-  goldPrice14   Float     @default(0)
-  goldPrice18   Float     @default(0)
-  goldPrice21   Float     @default(0)
-  goldPrice24   Float     @default(0)
-  dollarRate    Float     @default(0)
+  
+  // Prices from Admin Settings
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
+
+  priceGold14SYP Float @default(0)
+  priceGold18SYP Float @default(0)
+  priceGold21SYP Float @default(0)
+  priceGold24SYP Float @default(0)
+
+  // Exchange Rate Of Report for Selected Date
+  exchangeRateUSDtoSYP Float @default(0)
+
+
   totalGoldSold Float     @default(0)
   totalSalesUSD Float     @default(0)
   totalSalesSYP Float     @default(0)
@@ -223,14 +229,19 @@ model Report {
   exchanges Exchange[]
 }
 
+
+// --------------------------------------------------------
+//  MODEL: Settings (Only For Admins)
+// --------------------------------------------------------
+// Admin Will Set Prices of Gold Types and Exchange day by day
 model Settings {
-  id             String   @id @default(cuid())
-  date           DateTime @default(now())
-  
-  priceGold14USD Float    @default(0)
-  priceGold18USD Float    @default(0)
-  priceGold21USD Float    @default(0)
-  priceGold24USD Float    @default(0)
+  id   String   @id @default(cuid())
+  date DateTime @default(now())
+
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
 
   priceGold14SYP Float @default(0)
   priceGold18SYP Float @default(0)
