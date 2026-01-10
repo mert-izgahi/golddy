@@ -1,8 +1,8 @@
-import React from 'react'
+import AdminHomePage from "./client"
 
 function page() {
   return (
-    <div>page</div>
+    <AdminHomePage />
   )
 }
 

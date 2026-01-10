@@ -56,7 +56,8 @@ model Store {
 
   // Last price update timestamp
   lastPriceUpdate DateTime?
-
+  
+  
   // Profit margins (percentage)
   profitMarginGold14 Float @default(5)
   profitMarginGold18 Float @default(5)
@@ -225,6 +226,7 @@ model Report {
 model Settings {
   id             String   @id @default(cuid())
   date           DateTime @default(now())
+  
   priceGold14USD Float    @default(0)
   priceGold18USD Float    @default(0)
   priceGold21USD Float    @default(0)
