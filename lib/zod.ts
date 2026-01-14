@@ -131,14 +131,29 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
             .positive(positiveMessage),
 
         goldType: z
-            .enum(GoldType, requiredMessage),
+            .enum(GoldType),
 
-        // Note: pricePerGram will be fetched from settings based on goldType and currency
+        pricePerGramUSD: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
+        pricePerGramSYP: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
+        totalUSD: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
+        totalSYP: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
         currency: z
-            .enum(CurrencyType, requiredMessage),
+            .enum(CurrencyType),
 
         paymentType: z
-            .enum(PaymentType, requiredMessage),
+            .enum(PaymentType),
 
         amountPaid: z
             .number(requiredMessage)

@@ -468,7 +468,7 @@ import { CurrencyType, GoldType, PaymentType, Settings } from "@/lib/generated/p
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api-client";
-import { CurrentPrices, StoreInventory } from "@/lib/types";
+import { StoreInventory } from "@/lib/types";
 import { useSettings } from "@/hooks/use-settings";
 
 interface SaleFormProps {
@@ -499,6 +499,10 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
         defaultValues: {
             weight: 0,
             goldType: GoldType.GOLD_14,
+            pricePerGramUSD: 0,
+            pricePerGramSYP: 0,
+            totalUSD: 0,
+            totalSYP: 0,
             currency: CurrencyType.USD,
             paymentType: PaymentType.CASH,
             amountPaid: 0,
@@ -558,6 +562,10 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             form.reset({
                 weight: sale.weight,
                 goldType: sale.goldType as GoldType,
+                pricePerGramUSD: sale.pricePerGramUSD,
+                pricePerGramSYP: sale.pricePerGramSYP,
+                totalUSD: sale.totalUSD,
+                totalSYP: sale.totalSYP,
                 currency: sale.currency as CurrencyType,
                 paymentType: sale.paymentType as PaymentType,
                 amountPaid: sale.amountPaid,
@@ -575,17 +583,25 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
     const amountPaid = form.watch("amountPaid");
 
     // Calculate price per gram based on selected gold type and currency
-    const calculatePricePerGram = () => {
-        if (!settings) return 0;
+    const pricePerGram = (() => {
+        if (!settings) return { usd: 0, syp: 0 };
 
-        const key = `price${goldType.replace('GOLD_', 'Gold')}${currency}`;
-        return settings[key as keyof Settings] || 0;
-    };
+        const usdKey = `priceGold${goldType.replace('GOLD_', '')}USD` as keyof Settings;
+        const sypKey = `priceGold${goldType.replace('GOLD_', '')}SYP` as keyof Settings;
+
+        const usdValue = settings[usdKey];
+        const sypValue = settings[sypKey];
+
+        return {
+            usd: typeof usdValue === 'number' ? usdValue : 0,
+            syp: typeof sypValue === 'number' ? sypValue : 0
+        };
+    })();
 
     // Calculate total amount
-    const calculateTotal = () => {
-        const pricePerGram = calculatePricePerGram() as number;
-        return weight * pricePerGram;
+    const total = {
+        usd: weight * pricePerGram.usd,
+        syp: weight * pricePerGram.syp
     };
 
     // Get available inventory for selected gold type
@@ -607,13 +623,19 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
         return weight <= available;
     };
 
-    // Update amountPaid when total changes (for convenience)
+    // Update form values when calculations change
     useEffect(() => {
-        const total = calculateTotal();
-        if (total > 0 && !amountPaid) {
-            form.setValue("amountPaid", total);
+        const currentTotal = currency === 'USD' ? total.usd : total.syp;
+        if (currentTotal > 0 && !amountPaid) {
+            form.setValue("amountPaid", currentTotal);
         }
-    }, [weight, goldType, currency, currentPrices]);
+
+        // Update form values for price per gram and totals
+        form.setValue("pricePerGramUSD", pricePerGram.usd, { shouldDirty: false });
+        form.setValue("pricePerGramSYP", pricePerGram.syp, { shouldDirty: false });
+        form.setValue("totalUSD", total.usd, { shouldDirty: false });
+        form.setValue("totalSYP", total.syp, { shouldDirty: false });
+    }, [weight, goldType, currency, pricePerGram, total, amountPaid, form]);
 
     const onSubmit = async (data: CreateSaleInput) => {
         try {
@@ -681,10 +703,9 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
         ? createSaleMutation.isPending
         : updateSaleMutation.isPending;
 
-    const pricePerGram = calculatePricePerGram();
-    const total = calculateTotal();
     const availableInventory = getAvailableInventory();
     const showInsufficientInventory = weight > availableInventory;
+    const currentTotal = currency === 'USD' ? total.usd : total.syp;
 
     // Show loading state for create mode
     if (mode === "create" && isLoadingPrices) {
@@ -752,8 +773,8 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 <AlertCircle className="h-4 w-4 text-blue-600" />
                                 <AlertDescription className="text-blue-700">
                                     {lang === "en"
-                                        ? `Current exchange rate: 1 USD = ${currentPrices.exchangeRateUSDtoSYP.toFixed(2)} SYP`
-                                        : `سعر الصرف الحالي: ١ دولار = ${currentPrices.exchangeRateUSDtoSYP.toFixed(2)} ليرة`}
+                                        ? `Current exchange rate: 1 USD = ${typeof currentPrices.exchangeRateUSDtoSYP === 'number' ? currentPrices.exchangeRateUSDtoSYP.toFixed(2) : '0'} SYP`
+                                        : `سعر الصرف الحالي: ١ دولار = ${typeof currentPrices.exchangeRateUSDtoSYP === 'number' ? currentPrices.exchangeRateUSDtoSYP.toFixed(2) : '0'} ليرة`}
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -892,11 +913,11 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {mode === "create" && pricePerGram as number > 0 && (
+                                        {mode === "create" && (currency === 'USD' ? pricePerGram.usd : pricePerGram.syp) > 0 && (
                                             <FormDescription>
                                                 {lang === "en"
-                                                    ? `Price per gram: ${pricePerGram.toFixed(2)} ${currency}`
-                                                    : `السعر لكل جرام: ${pricePerGram.toFixed(2)} ${currency}`}
+                                                    ? `Price per gram: ${(currency === 'USD' ? pricePerGram.usd : pricePerGram.syp).toFixed(2)} ${currency}`
+                                                    : `السعر لكل جرام: ${(currency === 'USD' ? pricePerGram.usd : pricePerGram.syp).toFixed(2)} ${currency}`}
                                             </FormDescription>
                                         )}
                                         <FormMessage />
@@ -911,7 +932,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 </FormLabel>
                                 <FormControl>
                                     <Input
-                                        value={pricePerGram > 0 ? `${pricePerGram.toFixed(2)} ${currency}` : "-"}
+                                        value={currentTotal > 0 ? `${(currency === 'USD' ? pricePerGram.usd : pricePerGram.syp).toFixed(2)} ${currency}` : "-"}
                                         disabled
                                         className="bg-muted"
                                     />
@@ -928,7 +949,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 </FormLabel>
                                 <FormControl>
                                     <Input
-                                        value={total > 0 ? `${total.toFixed(2)} ${currency}` : "-"}
+                                        value={currentTotal > 0 ? `${currentTotal.toFixed(2)} ${currency}` : "-"}
                                         disabled
                                         className="bg-muted font-semibold"
                                     />
@@ -961,13 +982,13 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                                 }}
                                             />
                                         </FormControl>
-                                        {total > 0 && (
+                                        {currentTotal > 0 && (
                                             <FormDescription>
-                                                {field.value === total
+                                                {field.value === currentTotal
                                                     ? lang === "en" ? "Full payment" : "دفع كامل"
                                                     : lang === "en"
-                                                        ? `Difference: ${(field.value - total).toFixed(2)} ${currency}`
-                                                        : `الفرق: ${(field.value - total).toFixed(2)} ${currency}`}
+                                                        ? `Difference: ${(field.value - currentTotal).toFixed(2)} ${currency}`
+                                                        : `الفرق: ${(field.value - currentTotal).toFixed(2)} ${currency}`}
                                             </FormDescription>
                                         )}
                                         <FormMessage />
@@ -1090,11 +1111,11 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 </div>
                                 <div>
                                     <span className="text-gray-600">{lang === "en" ? "Price per Gram:" : "السعر لكل جرام:"}</span>
-                                    <span className="font-medium ml-2">{pricePerGram.toFixed(2)} {currency}</span>
+                                    <span className="font-medium ml-2">{(currency === 'USD' ? pricePerGram.usd : pricePerGram.syp).toFixed(2)} {currency}</span>
                                 </div>
                                 <div>
                                     <span className="text-gray-600">{lang === "en" ? "Total Amount:" : "المبلغ الإجمالي:"}</span>
-                                    <span className="font-medium ml-2">{total.toFixed(2)} {currency}</span>
+                                    <span className="font-medium ml-2">{currentTotal.toFixed(2)} {currency}</span>
                                 </div>
                                 <div>
                                     <span className="text-gray-600">{lang === "en" ? "Amount Paid:" : "المبلغ المدفوع:"}</span>
@@ -1105,8 +1126,8 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                         <span className="text-gray-600">{lang === "en" ? "Equivalent in other currency:" : "المعادل بالعملة الأخرى:"}</span>
                                         <span className="font-medium ml-2">
                                             {currency === CurrencyType.USD
-                                                ? `${(total * currentPrices.exchangeRateUSDtoSYP).toFixed(2)} SYP`
-                                                : `${(total / currentPrices.exchangeRateUSDtoSYP).toFixed(2)} USD`}
+                                                ? `${(currentTotal * (typeof currentPrices.exchangeRateUSDtoSYP === 'number' ? currentPrices.exchangeRateUSDtoSYP : 0)).toFixed(2)} SYP`
+                                                : `${(currentTotal / (typeof currentPrices.exchangeRateUSDtoSYP === 'number' ? currentPrices.exchangeRateUSDtoSYP : 1)).toFixed(2)} USD`}
                                         </span>
                                     </div>
                                 )}
