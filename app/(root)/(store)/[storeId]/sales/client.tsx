@@ -2,10 +2,12 @@
 "use client";
 import { Button } from '@/components/ui/button';
 import { useLangStore } from '@/store/lang-store'
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useGetSalesByStore, useDeleteSale } from '@/hooks/use-sales';
+import { useSaleInvoice } from '@/hooks/use-sale-invoice';
+import { InvoiceData } from '@/lib/pdf-generator';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -14,6 +16,9 @@ import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Sale } from '@/lib/generated/prisma/client';
 import { formatCurrency, formatDate, getPaymentTypeLabel } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { generateInvoicePDF, printInvoicePDF } from '@/lib/pdf-generator';
+import { InvoiceDialog } from '@/components/invoice/invoice-dialog';
 
 interface Props {
     storeId: string
@@ -24,9 +29,13 @@ function SalesPage({ storeId }: Props) {
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [selectedSale, setSelectedSale] = useState<string | null>(null);
 
     const { data: salesData, isLoading, error } = useGetSalesByStore(storeId, page, pageSize);
     const deleteSaleMutation = useDeleteSale();
+
+    // Hook for sale invoice data
+    const { data: invoiceData, isLoading: isLoadingInvoice } = useSaleInvoice(selectedSale || '');
 
     const title = lang === "en" ? "Sales List" : "قائمة المبيعات";
     const description = lang === "en" ? "Manage and track your daily sales transactions." : "إدارة وتتبع معاملات المبيعات اليومية الخاصة بك.";
@@ -150,6 +159,16 @@ function SalesPage({ storeId }: Props) {
                                 <Edit className="h-4 w-4" />
                             </Link>
                         </Button>
+
+                        {/* Invoice Button */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedSale(sale.id)}
+                        >
+                            <Download className="h-4 w-4" />
+                        </Button>
+
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button
@@ -231,7 +250,14 @@ function SalesPage({ storeId }: Props) {
                 isLoading={isLoading}
                 lang={lang}
             />
+            {/* Invoice Dialog */}
+            <InvoiceDialog
+                saleId={selectedSale}
+                isOpen={!!selectedSale && !isLoadingInvoice}
+                onClose={() => setSelectedSale(null)}
+            />
         </div>
+
     )
 }
 

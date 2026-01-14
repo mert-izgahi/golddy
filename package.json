@@ -76,7 +76,9 @@
     "tsx": "^4.21.0",
     "vaul": "^1.1.2",
     "zod": "^4.3.5",
-    "zustand": "^5.0.9"
+    "zustand": "^5.0.9",
+    "jspdf": "^2.5.2",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",

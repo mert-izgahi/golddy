@@ -877,6 +877,35 @@ salesRoutes
                 success: false
             }, 500);
         }
+    })
+
+    // @desc    Get sale with store details for invoice
+    // @route   GET /sales/:id/invoice
+    // @access  Private
+    // @method  Get
+    .get("/:id/invoice", authenticate, async (c) => {
+        const { id } = c.req.param();
+        const sale = await prisma.sale.findUnique({
+            where: { id },
+            include: {
+                store: true
+            }
+        });
+
+        if (!sale) {
+            return c.json({ message: "Sale not found", result: null, success: false }, 404);
+        }
+
+        // Get current settings for exchange rate
+        const settings = await prisma.settings.findFirst({
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return c.json({ 
+            message: "Sale invoice data fetched successfully", 
+            result: { sale, settings },
+            success: true 
+        });
     });
 
 export { salesRoutes };
