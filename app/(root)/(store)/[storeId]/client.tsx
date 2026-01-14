@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, DollarSign, Coins, Warehouse, Percent } from 
 import { useLangStore } from '@/store/lang-store';
 import { formatDate } from '@/lib/utils';
 import { GoldPriceService } from '@/services/gold-price.service';
+import { useSettings } from '@/hooks/use-settings';
 
 interface Props {
     storeId: string
@@ -14,27 +15,28 @@ interface Props {
 
 function StoreDashboardPage({ storeId }: Props) {
     const { data: store, isLoading } = useGetStoreById(storeId);
+    const { settings,isLoadingSettings } = useSettings();
     const { lang } = useLangStore();
 
-    
-    
-    if(isLoading){
+
+
+    if (isLoading || isLoadingSettings) {
         return <>Loading ...</>
     }
 
     // Calculate total gold value in USD
     const totalGoldValueUSD =
-        (store!.currentGold14 * store!.priceGold14USD) +
-        (store!.currentGold18 * store!.priceGold18USD) +
-        (store!.currentGold21 * store!.priceGold21USD) +
-        (store!.currentGold24 * store!.priceGold24USD);
+        (store!.currentGold14 * settings!.priceGold14USD) +
+        (store!.currentGold18 * settings!.priceGold18USD) +
+        (store!.currentGold21 * settings!.priceGold21USD) +
+        (store!.currentGold24 * settings!.priceGold24USD);
 
     // Calculate total gold value in SYP
     const totalGoldValueSYP =
-        (store!.currentGold14 * store!.priceGold14SYP) +
-        (store!.currentGold18 * store!.priceGold18SYP) +
-        (store!.currentGold21 * store!.priceGold21SYP) +
-        (store!.currentGold24 * store!.priceGold24SYP);
+        (store!.currentGold14 * settings!.priceGold14SYP) +
+        (store!.currentGold18 * settings!.priceGold18SYP) +
+        (store!.currentGold21 * settings!.priceGold21SYP) +
+        (store!.currentGold24 * settings!.priceGold24SYP);
 
     // Calculate total inventory value (gold + cash)
     const totalInventoryValueUSD = totalGoldValueUSD + store!.currentUSD;
@@ -154,11 +156,11 @@ function StoreDashboardPage({ storeId }: Props) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            1 USD = {store!.exchangeRateUSDtoSYP.toFixed(2)} SYP
+                            1 USD = {settings!.exchangeRateUSDtoSYP.toFixed(2)} SYP
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                             {lang === "en" ? "Last updated" : "آخر تحديث"}:{" "}
-                            {formatDate(store!.lastPriceUpdate!, lang)}
+                            {formatDate(settings!.updatedAt!, lang)}
                         </p>
                     </CardContent>
                 </Card>
@@ -184,14 +186,14 @@ function StoreDashboardPage({ storeId }: Props) {
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Price:</span>
                                 <div className="text-right">
-                                    <div className="font-semibold">{formatCurrency(store!.priceGold24USD, "USD")}</div>
-                                    <div className="text-sm">{formatCurrency(store!.priceGold24SYP, "SYP")}</div>
+                                    <div className="font-semibold">{formatCurrency(settings!.priceGold24USD, "USD")}</div>
+                                    <div className="text-sm">{formatCurrency(settings!.priceGold24SYP, "SYP")}</div>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Value:</span>
                                 <div className="font-semibold">
-                                    {formatCurrency(store!.currentGold24 * store!.priceGold24USD, "USD")}
+                                    {formatCurrency(store!.currentGold24 * settings!.priceGold24USD, "USD")}
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
@@ -219,14 +221,14 @@ function StoreDashboardPage({ storeId }: Props) {
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Price:</span>
                                 <div className="text-right">
-                                    <div className="font-semibold">{formatCurrency(store!.priceGold21USD, "USD")}</div>
-                                    <div className="text-sm">{formatCurrency(store!.priceGold21SYP, "SYP")}</div>
+                                    <div className="font-semibold">{formatCurrency(settings!.priceGold21USD, "USD")}</div>
+                                    <div className="text-sm">{formatCurrency(settings!.priceGold21SYP, "SYP")}</div>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Value:</span>
                                 <div className="font-semibold">
-                                    {formatCurrency(store!.currentGold21 * store!.priceGold21USD, "USD")}
+                                    {formatCurrency(store!.currentGold21 * settings!.priceGold21USD, "USD")}
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
@@ -254,14 +256,14 @@ function StoreDashboardPage({ storeId }: Props) {
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Price:</span>
                                 <div className="text-right">
-                                    <div className="font-semibold">{formatCurrency(store!.priceGold18USD, "USD")}</div>
-                                    <div className="text-sm">{formatCurrency(store!.priceGold18SYP, "SYP")}</div>
+                                    <div className="font-semibold">{formatCurrency(settings!.priceGold18USD, "USD")}</div>
+                                    <div className="text-sm">{formatCurrency(settings!.priceGold18SYP, "SYP")}</div>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Value:</span>
                                 <div className="font-semibold">
-                                    {formatCurrency(store!.currentGold18 * store!.priceGold18USD, "USD")}
+                                    {formatCurrency(store!.currentGold18 * settings!.priceGold18USD, "USD")}
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
@@ -289,14 +291,14 @@ function StoreDashboardPage({ storeId }: Props) {
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Price:</span>
                                 <div className="text-right">
-                                    <div className="font-semibold">{formatCurrency(store!.priceGold14USD, "USD")}</div>
-                                    <div className="text-sm">{formatCurrency(store!.priceGold14SYP, "SYP")}</div>
+                                    <div className="font-semibold">{formatCurrency(settings!.priceGold14USD, "USD")}</div>
+                                    <div className="text-sm">{formatCurrency(settings!.priceGold14SYP, "SYP")}</div>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Value:</span>
                                 <div className="font-semibold">
-                                    {formatCurrency(store!.currentGold14 * store!.priceGold14USD, "USD")}
+                                    {formatCurrency(store!.currentGold14 * settings!.priceGold14USD, "USD")}
                                 </div>
                             </div>
                             <div className="flex justify-between items-center">

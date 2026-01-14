@@ -23,6 +23,7 @@ async function layout({ children }: PropsWithChildren) {
             ownerId: user.id
         }
     });
+    
 
     if (!store) {
         redirect('/create-store');

@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Store } from "@/lib/generated/prisma";
 import { ApiResponseWithPagination } from "@/lib/types";
+import { StoreInput } from "@/lib/zod";
 
 
 export const useGetStoreById = (storeId: string) => {
@@ -19,6 +20,39 @@ export const useGetStoreById = (storeId: string) => {
         },
     });
 }
+
+
+
+
+// Create store mutation
+export const useCreateStore = () => {
+    return useMutation({
+        mutationFn: async (data: StoreInput) => {
+            const response = await apiClient.post("/stores", data);
+            const { success, result } = await response.data;
+
+            if (!success) {
+                throw new Error("Failed to create store");
+            }
+            return result;
+        },
+    });
+};
+
+// Update store mutation
+export const useUpdateStore = () => {
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: Partial<StoreInput> }) => {
+            const response = await apiClient.put(`/stores/${id}`, data);
+            const { success, result } = await response.data;
+
+            if (!success) {
+                throw new Error("Failed to update store");
+            }
+            return result;
+        },
+    });
+};
 
 
 // Admin: Get all stores with pagination

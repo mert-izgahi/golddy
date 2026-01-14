@@ -78,7 +78,7 @@ storesRoutes
         const user = c.get("user") as ContextUser;
 
         const body = await c.req.json();
-        const { name } = body;
+        const { name, } = body;
 
         if (!name) {
             return c.json({ message: "Name is required", result: null, success: false }, 400);
@@ -89,9 +89,7 @@ storesRoutes
         });
 
         return c.json({ message: "Store created successfully", result: newStore, success: true }, 201);
-    })
-    
-    ;
+    });
 
 
 export { storesRoutes };

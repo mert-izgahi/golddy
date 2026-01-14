@@ -1,7 +1,7 @@
 // lib/zod.ts
 import { z } from "zod";
-import { CurrencyType, GoldType, PaymentType, Role, StockType, } from "./generated/prisma";
-import dayjs from "dayjs";
+import { CurrencyType, GoldType, PaymentType, Role, StockType, StoreStatus } from "./generated/prisma";
+
 
 // ✅ Sign-in schema
 export const getSignInSchema = (lang: "en" | "ar") => {
@@ -258,6 +258,111 @@ export const getUserSchema = (lang: "en" | "ar") => {
     });
 };
 
+// lib/zod.ts (add to existing file)
+
+
+export const getStoreSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+
+    return z.object({
+        name: z
+            .string()
+            .min(2, lang === "en" ? "Store name is too short" : "اسم المتجر قصير جدًا")
+            .max(100, lang === "en" ? "Store name is too long" : "اسم المتجر طويل جدًا"),
+
+        address: z
+            .string()
+            .optional()
+            .or(z.literal("")),
+
+        city: z
+            .string()
+            .optional()
+            .or(z.literal("")),
+
+        logoUrl: z
+            .string()
+            .url(lang === "en" ? "Invalid URL" : "رابط غير صالح")
+            .optional()
+            .or(z.literal("")),
+
+        primaryPhoneNumber: z
+            .string()
+            .regex(/^\+?[0-9]{8,15}$/, {
+                message:
+                    lang === "en"
+                        ? "Invalid phone number"
+                        : "رقم الهاتف غير صالح",
+            })
+            .optional()
+            .or(z.literal("")),
+
+        secondaryPhoneNumber: z
+            .string()
+            .regex(/^\+?[0-9]{8,15}$/, {
+                message:
+                    lang === "en"
+                        ? "Invalid phone number"
+                        : "رقم الهاتف غير صالح",
+            })
+            .optional()
+            .or(z.literal("")),
+
+        status: z
+            .enum(StoreStatus, lang === "en" ? "Status is required" : "الحالة مطلوبة"),
+
+        // Initial inventory values
+        currentGold14: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        currentGold18: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        currentGold21: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        currentGold24: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        // Initial cash balances
+        currentUSD: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        currentSYP: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        // Profit margins
+        profitMarginGold14: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
+            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+
+        profitMarginGold18: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
+            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+
+        profitMarginGold21: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
+            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+
+        profitMarginGold24: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
+            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+    });
+};
+
+
+
 // ✅ Export inferred types
 export type SignInInput = z.infer<ReturnType<typeof getSignInSchema>>;
 export type CreateSaleInput = z.infer<ReturnType<typeof getCreateSaleSchema>>;
@@ -266,3 +371,4 @@ export type CreateStockInput = z.infer<ReturnType<typeof getCreateStockSchema>>;
 export type UpdateStockInput = z.infer<ReturnType<typeof getUpdateStockSchema>>;
 export type UpdateSettingsInput = z.infer<ReturnType<typeof getUpdateSettingsSchema>>;
 export type UserInput = z.infer<ReturnType<typeof getUserSchema>>;
+export type StoreInput = z.infer<ReturnType<typeof getStoreSchema>>;
