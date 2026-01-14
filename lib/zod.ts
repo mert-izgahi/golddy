@@ -21,6 +21,98 @@ export const getSignInSchema = (lang: "en" | "ar") => {
 };
 
 // ✅ Create Sale schema
+// export const getCreateSaleSchema = (lang: "en" | "ar") => {
+//     const requiredMessage =
+//         lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+//     const positiveMessage =
+//         lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
+//     const invalidGoldType =
+//         lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
+//     const invalidCurrency =
+//         lang === "en" ? "Invalid currency" : "العملة غير صالحة";
+//     const invalidPaymentType =
+//         lang === "en" ? "Invalid payment type" : "طريقة الدفع غير صالحة";
+
+//     return z.object({
+//         weight: z
+//             .number(requiredMessage)
+//             .positive(positiveMessage),
+
+//         goldType: z
+//             .enum(GoldType, requiredMessage)
+//             .refine((val) => Object.values(GoldType).includes(val), {
+//                 message: invalidGoldType,
+//             }),
+
+//         pricePerGram: z
+//             .number(requiredMessage)
+//             .positive(positiveMessage),
+
+//         total: z
+//             .number(requiredMessage)
+//             .positive(positiveMessage),
+
+//         currency: z
+//             .enum(CurrencyType, requiredMessage)
+//             .refine((val) => Object.values(CurrencyType).includes(val), {
+//                 message: invalidCurrency,
+//             }),
+
+//         paymentType: z
+//             .enum(PaymentType, requiredMessage)
+//             .refine((val) => Object.values(PaymentType).includes(val), {
+//                 message: invalidPaymentType,
+//             }),
+
+//         customerName: z.string().optional(),
+//         description: z.string().optional(),
+//     });
+// };
+
+// ✅ Update Sale schema (all optional)
+// export const getUpdateSaleSchema = (lang: "en" | "ar") => {
+//     const positiveMessage =
+//         lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
+//     const invalidGoldType =
+//         lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
+//     const invalidCurrency =
+//         lang === "en" ? "Invalid currency" : "العملة غير صالحة";
+//     const invalidPaymentType =
+//         lang === "en" ? "Invalid payment type" : "طريقة الدفع غير صالحة";
+
+//     return z.object({
+//         weight: z.number().positive(positiveMessage).optional(),
+
+//         goldType: z
+//             .enum(GoldType)
+//             .refine((val) => Object.values(GoldType).includes(val), {
+//                 message: invalidGoldType,
+//             })
+//             .optional(),
+
+//         pricePerGram: z.number().positive(positiveMessage).optional(),
+//         total: z.number().positive(positiveMessage).optional(),
+
+//         currency: z
+//             .enum(CurrencyType)
+//             .refine((val) => Object.values(CurrencyType).includes(val), {
+//                 message: invalidCurrency,
+//             })
+//             .optional(),
+
+//         paymentType: z
+//             .enum(PaymentType)
+//             .refine((val) => Object.values(PaymentType).includes(val), {
+//                 message: invalidPaymentType,
+//             })
+//             .optional(),
+
+//         customerName: z.string().optional(),
+//         description: z.string().optional(),
+//     });
+// };
+
+// ✅ Create Sale schema (updated for your Prisma model)
 export const getCreateSaleSchema = (lang: "en" | "ar") => {
     const requiredMessage =
         lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
@@ -39,78 +131,31 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
             .positive(positiveMessage),
 
         goldType: z
-            .enum(GoldType, requiredMessage)
-            .refine((val) => Object.values(GoldType).includes(val), {
-                message: invalidGoldType,
-            }),
+            .enum(GoldType, requiredMessage),
 
-        pricePerGram: z
-            .number(requiredMessage)
-            .positive(positiveMessage),
-
-        total: z
-            .number(requiredMessage)
-            .positive(positiveMessage),
-
+        // Note: pricePerGram will be fetched from settings based on goldType and currency
         currency: z
-            .enum(CurrencyType, requiredMessage)
-            .refine((val) => Object.values(CurrencyType).includes(val), {
-                message: invalidCurrency,
-            }),
+            .enum(CurrencyType, requiredMessage),
 
         paymentType: z
-            .enum(PaymentType, requiredMessage)
-            .refine((val) => Object.values(PaymentType).includes(val), {
-                message: invalidPaymentType,
-            }),
+            .enum(PaymentType, requiredMessage),
+
+        amountPaid: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
 
         customerName: z.string().optional(),
+        customerPhone: z.string().optional(),
         description: z.string().optional(),
     });
 };
-
-// ✅ Update Sale schema (all optional)
+// ✅ Update Sale schema
 export const getUpdateSaleSchema = (lang: "en" | "ar") => {
-    const positiveMessage =
-        lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
-    const invalidGoldType =
-        lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
-    const invalidCurrency =
-        lang === "en" ? "Invalid currency" : "العملة غير صالحة";
-    const invalidPaymentType =
-        lang === "en" ? "Invalid payment type" : "طريقة الدفع غير صالحة";
-
-    return z.object({
-        weight: z.number().positive(positiveMessage).optional(),
-
-        goldType: z
-            .enum(GoldType)
-            .refine((val) => Object.values(GoldType).includes(val), {
-                message: invalidGoldType,
-            })
-            .optional(),
-
-        pricePerGram: z.number().positive(positiveMessage).optional(),
-        total: z.number().positive(positiveMessage).optional(),
-
-        currency: z
-            .enum(CurrencyType)
-            .refine((val) => Object.values(CurrencyType).includes(val), {
-                message: invalidCurrency,
-            })
-            .optional(),
-
-        paymentType: z
-            .enum(PaymentType)
-            .refine((val) => Object.values(PaymentType).includes(val), {
-                message: invalidPaymentType,
-            })
-            .optional(),
-
-        customerName: z.string().optional(),
-        description: z.string().optional(),
-    });
+    const schema = getCreateSaleSchema(lang).partial();
+    return schema;
 };
+
+
 
 
 // ✅ Create Stock schema

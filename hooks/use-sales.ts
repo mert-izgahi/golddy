@@ -1,6 +1,6 @@
 // hooks/use-sales.ts
 import { useQuery, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import { apiClient } from '@/lib/api-client';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';
 import { Sale } from '@/lib/generated/prisma/client';
 import { CreateSaleInput, UpdateSaleInput } from '@/lib/zod';
@@ -10,12 +10,18 @@ export const useGetSalesByStore = (storeId: string, page: number = 1, limit: num
     return useQuery<ApiResponseWithPagination<Sale>>({
         queryKey: ['get-sales-by-store', storeId, page, limit],
         queryFn: async () => {
-            const response = await axios.get<ApiResponseWithPagination<Sale>>(
-                `/api/sales/store/${storeId}?page=${page}&limit=${limit}`
-            );
-            return response.data;
+            try {
+                const response = await apiClient.get<ApiResponseWithPagination<Sale>>(
+                    `/sales/store/${storeId}?page=${page}&limit=${limit}`
+                );
+                return response.data;
+            } catch (error: any) {
+                console.error('Error fetching sales:', error);
+                throw new Error(error?.response?.data?.message || 'Failed to fetch sales data');
+            }
         },
         enabled: !!storeId,
+        retry: 1,
     });
 };
 
@@ -24,7 +30,7 @@ export const useGetSaleById = (saleId: string) => {
     return useQuery<Sale>({
         queryKey: ['get-sale-by-id', saleId],
         queryFn: async () => {
-            const response = await axios.get<ApiResponse<Sale>>(`/api/sales/${saleId}`);
+            const response = await apiClient.get<ApiResponse<Sale>>(`/sales/${saleId}`);
             return response.data.result;
         },
         enabled: !!saleId,
@@ -35,7 +41,7 @@ export const useGetSaleById = (saleId: string) => {
 export const useCreateSale = () => {
     return useMutation({
         mutationFn: async ({ storeId, data }: { storeId: string; data: CreateSaleInput }) => {
-            const response = await axios.post<ApiResponse<Sale>>(`/api/sales/store/${storeId}`, data);
+            const response = await apiClient.post<ApiResponse<Sale>>(`/sales/store/${storeId}`, data);
             return response.data.result;
         },
     });
@@ -45,7 +51,7 @@ export const useCreateSale = () => {
 export const useUpdateSale = () => {
     return useMutation({
         mutationFn: async ({ id, data }: { id: string; data: UpdateSaleInput }) => {
-            const response = await axios.put<ApiResponse<Sale>>(`/api/sales/${id}`, data);
+            const response = await apiClient.put<ApiResponse<Sale>>(`/sales/${id}`, data);
             return response.data.result;
         },
     });
@@ -55,7 +61,7 @@ export const useUpdateSale = () => {
 export const useDeleteSale = () => {
     return useMutation({
         mutationFn: async (saleId: string) => {
-            const response = await axios.delete<ApiResponse<null>>(`/api/sales/${saleId}`);
+            const response = await apiClient.delete<ApiResponse<null>>(`/sales/${saleId}`);
             return response.data;
         },
     });
@@ -66,7 +72,7 @@ export const useGetSalesStats = (storeId: string) => {
     return useQuery({
         queryKey: ['get-sales-stats', storeId],
         queryFn: async () => {
-            const response = await axios.get(`/api/sales/stats/store/${storeId}`);
+            const response = await apiClient.get(`/sales/stats/store/${storeId}`);
             return response.data.result;
         },
         enabled: !!storeId,

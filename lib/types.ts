@@ -6,6 +6,25 @@ export type UserWithStores = User & {
     stores: Store[]
 }
 
+export interface CurrentPrices {
+  [key: string]: number;
+  priceGold14USD: number;
+  priceGold18USD: number;
+  priceGold21USD: number;
+  priceGold24USD: number;
+  priceGold14SYP: number;
+  priceGold18SYP: number;
+  priceGold21SYP: number;
+  priceGold24SYP: number;
+  exchangeRateUSDtoSYP: number;
+}
+
+export interface StoreInventory {
+  currentGold14: number;
+  currentGold18: number;
+  currentGold21: number;
+  currentGold24: number;
+}
 
 export type ApiResponse<T> = {
     result: T;
