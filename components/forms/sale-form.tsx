@@ -1,4 +1,4 @@
-// components/forms/sale-form.tsx - UPDATED VERSION WITH PROFIT
+// components/forms/sale-form.tsx - IMPROVED VERSION WITH BETTER UX
 "use client";
 
 import { useEffect, useState } from "react";
@@ -29,11 +29,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle, Calculator, DollarSign } from "lucide-react";
+import { Loader2, AlertCircle, Calculator, DollarSign, Scale, CreditCard, User, FileText, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CurrencyType, GoldType, PaymentType, Store } from "@/lib/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { apiClient } from "@/lib/api-client";
 import { StoreInventory } from "@/lib/types";
 import { useGetStoreById } from "@/hooks/use-stores";
@@ -75,9 +76,10 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             customerName: "",
             customerPhone: "",
             description: "",
-            profitUSD: 0, // Added default profit
+            profitUSD: 0,
             profitSYP: 0,
         },
+        mode:"onChange",
     });
 
     // Fetch store inventory for create mode
@@ -86,7 +88,6 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             if (mode === "create") {
                 setIsLoadingInventory(true);
                 try {
-                    // Fetch store inventory
                     const storeResponse = await apiClient.get(`/stores/${storeId}`);
                     if (storeResponse.data.success) {
                         const store = storeResponse.data.result;
@@ -175,7 +176,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             pricePerGramSYP: sypPricePerGram,
             baseTotalUSD: baseTotalUSD,
             baseTotalSYP: baseTotalSYP,
-            totalUSD: baseTotalUSD + (profitUSD || 0), // Add profit to totals
+            totalUSD: baseTotalUSD + (profitUSD || 0),
             totalSYP: baseTotalSYP + (profitSYP || 0),
         };
     };
@@ -211,12 +212,10 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
         const currentTotal = currency === CurrencyType.USD ? totals.totalUSD : totals.totalSYP;
         const currentAmountPaid = form.getValues("amountPaid");
 
-        // Only auto-set amountPaid if it's zero or undefined and we have a valid total
         if (currentTotal > 0 && (!currentAmountPaid || currentAmountPaid === 0)) {
             form.setValue("amountPaid", currentTotal, { shouldValidate: true, shouldDirty: true });
         }
 
-        // Update form values for price per gram and totals
         form.setValue("pricePerGramUSD", totals.pricePerGramUSD, {
             shouldValidate: true,
             shouldDirty: false
@@ -234,7 +233,6 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             shouldDirty: false
         });
 
-        // Auto-calculate SYP profit when USD profit changes
         if (store) {
             const currentProfitUSD = form.getValues("profitUSD");
             const calculatedProfitSYP = calculateSYPProfit(currentProfitUSD);
@@ -247,7 +245,6 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
 
     const onSubmit = async (data: CreateSaleInput) => {
         try {
-            // Check inventory before submitting
             if (mode === "create") {
                 const available = getAvailableInventory();
                 if (data.weight > available) {
@@ -260,7 +257,6 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                 }
             }
 
-            // Calculate SYP profit if not already calculated
             if (store && (!data.profitSYP || data.profitSYP === 0) && data.profitUSD > 0) {
                 data.profitSYP = calculateSYPProfit(data.profitUSD);
             }
@@ -289,6 +285,8 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                     lang === "en" ? "Sale updated successfully" : "تم تحديث البيع بنجاح"
                 );
             }
+
+            router.push(`/${store?.id}/sales`)
         } catch (error: any) {
             toast.error(
                 error?.message ||
@@ -370,7 +368,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
     return (
         <Card className="border-none shadow-none">
             <CardHeader>
-                <CardTitle>
+                <CardTitle className="text-2xl">
                     {mode === "create"
                         ? lang === "en" ? "Create New Sale" : "إنشاء بيع جديد"
                         : lang === "en" ? "Update Sale" : "تحديث البيع"}
@@ -387,7 +385,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         {/* Current Prices Alert */}
                         {store && mode === "create" && (
                             <Alert className="bg-blue-50 border-blue-200">
@@ -400,486 +398,559 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                             </Alert>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Gold Type */}
-                            <FormField
-                                control={form.control}
-                                name="goldType"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Gold Type" : "نوع الذهب"}
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            disabled={mode === "edit"}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder={lang === "en" ? "Select gold type" : "اختر نوع الذهب"} />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {goldTypeOptions.map((option) => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        <div className="flex items-center justify-between">
-                                                            <span>{option.label}</span>
-                                                            {mode === "create" && storeInventory && (
-                                                                <Badge variant="outline" className="ml-2">
-                                                                    {(() => {
-                                                                        switch (option.value) {
-                                                                            case GoldType.GOLD_14: return `${storeInventory.currentGold14.toFixed(2)}g`;
-                                                                            case GoldType.GOLD_18: return `${storeInventory.currentGold18.toFixed(2)}g`;
-                                                                            case GoldType.GOLD_21: return `${storeInventory.currentGold21.toFixed(2)}g`;
-                                                                            case GoldType.GOLD_24: return `${storeInventory.currentGold24.toFixed(2)}g`;
-                                                                            default: return "0g";
-                                                                        }
-                                                                    })()}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {mode === "create" && (
-                                            <FormDescription>
-                                                {lang === "en" ? "Available inventory shown" : "المخزون المتاح موضح"}
-                                            </FormDescription>
-                                        )}
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        {/* SECTION 1: Gold Details */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Scale className="h-5 w-5 text-teal-700" />
+                                <h3 className="text-lg font-semibold text-teal-900">
+                                    {lang === "en" ? "Gold Details" : "تفاصيل الذهب"}
+                                </h3>
+                            </div>
+                            <Separator className="bg-teal-100" />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Gold Type */}
+                                <FormField
+                                    control={form.control}
+                                    name="goldType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Gold Type" : "نوع الذهب"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                                disabled={mode === "edit"}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder={lang === "en" ? "Select gold type" : "اختر نوع الذهب"} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {goldTypeOptions.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            <div className="flex items-center justify-between">
+                                                                <span>{option.label}</span>
+                                                                {mode === "create" && storeInventory && (
+                                                                    <Badge variant="outline" className="ml-2">
+                                                                        {(() => {
+                                                                            switch (option.value) {
+                                                                                case GoldType.GOLD_14: return `${storeInventory.currentGold14.toFixed(2)}g`;
+                                                                                case GoldType.GOLD_18: return `${storeInventory.currentGold18.toFixed(2)}g`;
+                                                                                case GoldType.GOLD_21: return `${storeInventory.currentGold21.toFixed(2)}g`;
+                                                                                case GoldType.GOLD_24: return `${storeInventory.currentGold24.toFixed(2)}g`;
+                                                                                default: return "0g";
+                                                                            }
+                                                                        })()}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {mode === "create" && (
+                                                <FormDescription>
+                                                    {lang === "en" ? "Available inventory shown" : "المخزون المتاح موضح"}
+                                                </FormDescription>
+                                            )}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            {/* Weight */}
-                            <FormField
-                                control={form.control}
-                                name="weight"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Weight (grams)" : "الوزن (جرام)"}
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
+                                {/* Weight */}
+                                <FormField
+                                    control={form.control}
+                                    name="weight"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Weight (grams)" : "الوزن (جرام)"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0.01"
+                                                        placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
+                                                        className={showInsufficientInventory ? "border-red-500" : ""}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => {
+                                                            const value = parseFloat(e.target.value) || 0;
+                                                            field.onChange(value);
+                                                        }}
+                                                    />
+                                                    {showInsufficientInventory && (
+                                                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                            <AlertCircle className="h-4 w-4 text-red-500" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </FormControl>
+                                            {mode === "create" && (
+                                                <>
+                                                    <FormDescription>
+                                                        {hasSufficientInventory()
+                                                            ? `${lang === "en" ? "Available" : "المتاح"}: ${availableInventory.toFixed(2)}g`
+                                                            : `${lang === "en" ? "Insufficient" : "غير كاف"}: ${availableInventory.toFixed(2)}g`}
+                                                    </FormDescription>
+                                                    {showInsufficientInventory && (
+                                                        <p className="text-sm text-red-500 mt-1">
+                                                            {lang === "en"
+                                                                ? `Requested weight exceeds available inventory by ${(weight - availableInventory).toFixed(2)}g`
+                                                                : `الوزن المطلوب يتجاوز المخزون المتاح بمقدار ${(weight - availableInventory).toFixed(2)} جرام`}
+                                                        </p>
+                                                    )}
+                                                </>
+                                            )}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* SECTION 2: Pricing & Currency */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Calculator className="h-5 w-5 text-teal-700" />
+                                <h3 className="text-lg font-semibold text-teal-900">
+                                    {lang === "en" ? "Pricing & Currency" : "التسعير والعملة"}
+                                </h3>
+                            </div>
+                            <Separator className="bg-teal-100" />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Currency */}
+                                <FormField
+                                    control={form.control}
+                                    name="currency"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Currency" : "العملة"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                                disabled={mode === "edit"}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder={lang === "en" ? "Select currency" : "اختر العملة"} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {currencyOptions.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormDescription>
+                                                {lang === "en"
+                                                    ? "Select the currency for this transaction"
+                                                    : "اختر العملة لهذه العملية"}
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Price Calculation Preview */}
+                                <FormItem>
+                                    <FormLabel>
+                                        {lang === "en" ? "Price Calculation" : "حساب السعر"}
+                                    </FormLabel>
+                                    <div className="rounded-md border bg-gradient-to-br from-gray-50 to-gray-100 p-4 text-sm shadow-sm">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Calculator className="h-4 w-4 text-teal-600" />
+                                            <span className="font-semibold text-teal-900">
+                                                {lang === "en" ? "Current Prices:" : "الأسعار الحالية:"}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            <div className="bg-white p-2 rounded border">
+                                                <span className="text-gray-600 block mb-1">USD:</span>
+                                                <span className="font-bold text-teal-700">
+                                                    ${totals.pricePerGramUSD.toFixed(2)}/g
+                                                </span>
+                                            </div>
+                                            <div className="bg-white p-2 rounded border">
+                                                <span className="text-gray-600 block mb-1">SYP:</span>
+                                                <span className="font-bold text-teal-700">
+                                                    {totals.pricePerGramSYP.toFixed(2)} ل.س/g
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {store?.exchangeRateUSDtoSYP && (
+                                            <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border">
+                                                {lang === "en"
+                                                    ? `Exchange rate: 1 USD = ${store.exchangeRateUSDtoSYP.toFixed(2)} SYP`
+                                                    : `سعر الصرف: ١ دولار = ${store.exchangeRateUSDtoSYP.toFixed(2)} ليرة`}
+                                            </div>
+                                        )}
+                                    </div>
+                                </FormItem>
+                            </div>
+                        </div>
+
+                        {/* SECTION 3: Profit Margin */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="h-5 w-5 text-green-700" />
+                                <h3 className="text-lg font-semibold text-green-900">
+                                    {lang === "en" ? "Profit Margin" : "هامش الربح"}
+                                </h3>
+                            </div>
+                            <Separator className="bg-green-100" />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Profit USD */}
+                                <FormField
+                                    control={form.control}
+                                    name="profitUSD"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Profit (USD)" : "أجور (دولار)"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                                        <DollarSign className="h-4 w-4 text-green-500" />
+                                                    </div>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
+                                                        className="pl-10 border-green-200 focus:border-green-400"
+                                                        value={field.value || ""}
+                                                        onChange={(e) => {
+                                                            const value = parseFloat(e.target.value) || 0;
+                                                            field.onChange(value);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormDescription>
+                                                {lang === "en"
+                                                    ? "Additional profit amount in USD"
+                                                    : "مبلغ أجور بالدولار"}
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Profit SYP (Read-only) */}
+                                <FormField
+                                    control={form.control}
+                                    name="profitSYP"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Profit (SYP)" : "أجور (ليرة)"}
+                                            </FormLabel>
+                                            <FormControl>
                                                 <Input
                                                     type="number"
-                                                    step="0.01"
-                                                    min="0.01"
-                                                    placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
-                                                    className={showInsufficientInventory ? "border-red-500" : ""}
-                                                    value={field.value || ""}
-                                                    onChange={(e) => {
-                                                        const value = parseFloat(e.target.value) || 0;
-                                                        field.onChange(value);
-                                                    }}
+                                                    readOnly
+                                                    className="bg-green-50 border-green-200"
+                                                    value={profitSYP.toFixed(2)}
                                                 />
-                                                {showInsufficientInventory && (
-                                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                                        <AlertCircle className="h-4 w-4 text-red-500" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </FormControl>
-                                        {mode === "create" && (
-                                            <>
-                                                <FormDescription>
-                                                    {hasSufficientInventory()
-                                                        ? `${lang === "en" ? "Available" : "المتاح"}: ${availableInventory.toFixed(2)}g`
-                                                        : `${lang === "en" ? "Insufficient" : "غير كاف"}: ${availableInventory.toFixed(2)}g`}
-                                                </FormDescription>
-                                                {showInsufficientInventory && (
-                                                    <p className="text-sm text-red-500 mt-1">
-                                                        {lang === "en"
-                                                            ? `Requested weight exceeds available inventory by ${(weight - availableInventory).toFixed(2)}g`
-                                                            : `الوزن المطلوب يتجاوز المخزون المتاح بمقدار ${(weight - availableInventory).toFixed(2)} جرام`}
-                                                    </p>
-                                                )}
-                                            </>
-                                        )}
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Currency */}
-                            <FormField
-                                control={form.control}
-                                name="currency"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Currency" : "العملة"}
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            disabled={mode === "edit"}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder={lang === "en" ? "Select currency" : "اختر العملة"} />
-                                                </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
-                                                {currencyOptions.map((option) => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormDescription>
-                                            {lang === "en"
-                                                ? "Select the currency for this transaction"
-                                                : "اختر العملة لهذه العملية"}
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Price Calculation Preview */}
-                            <FormItem>
-                                <FormLabel>
-                                    {lang === "en" ? "Price Calculation" : "حساب السعر"}
-                                </FormLabel>
-                                <div className="rounded-md border bg-gray-50 p-3 text-sm">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Calculator className="h-4 w-4 text-gray-500" />
-                                        <span className="font-medium">
-                                            {lang === "en" ? "Current Prices:" : "الأسعار الحالية:"}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div>
-                                            <span className="text-gray-600">USD:</span>
-                                            <span className="font-medium ml-1">
-                                                ${totals.pricePerGramUSD.toFixed(2)}/g
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">SYP:</span>
-                                            <span className="font-medium ml-1">
-                                                {totals.pricePerGramSYP.toFixed(2)} ليرة/g
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {store?.exchangeRateUSDtoSYP && (
-                                        <div className="mt-1 text-xs text-gray-500">
-                                            {lang === "en"
-                                                ? `Exchange rate: 1 USD = ${store.exchangeRateUSDtoSYP.toFixed(2)} SYP`
-                                                : `سعر الصرف: ١ دولار = ${store.exchangeRateUSDtoSYP.toFixed(2)} ليرة`}
-                                        </div>
+                                            <FormDescription>
+                                                {lang === "en"
+                                                    ? "Calculated automatically based on exchange rate"
+                                                    : "محسوب تلقائياً بناءً على سعر الصرف"}
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
                                     )}
-                                </div>
-                            </FormItem>
+                                />
+                            </div>
 
-                            {/* Profit USD */}
-                            <FormField
-                                control={form.control}
-                                name="profitUSD"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Profit (USD)" : "أجور (دولار)"}
-                                            <span className="text-gray-400 ml-1">*</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                                                    <DollarSign className="h-4 w-4 text-gray-400" />
+                            {/* Total Amount Display */}
+                            <div className="bg-gradient-to-br from-teal-50 to-green-50 p-5 rounded-lg border-2 border-teal-200 shadow-sm">
+                                <h4 className="text-sm font-semibold text-teal-900 mb-3">
+                                    {lang === "en" ? "Total Amount (Including Profit)" : "المبلغ الإجمالي (بما في ذلك الأجور)"}
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="bg-white rounded-lg border-2 border-teal-300 p-4 shadow-sm">
+                                        <div className="text-xs font-medium text-gray-600 mb-1">
+                                            {lang === "en" ? "In USD:" : "بالدولار:"}
+                                        </div>
+                                        <div className="text-2xl font-bold text-teal-700">
+                                            ${totals.totalUSD.toFixed(2)}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-2 space-y-1">
+                                            <div>{lang === "en" ? "Base:" : "الأساس:"} ${totals.baseTotalUSD.toFixed(2)}</div>
+                                            {profitUSD > 0 && (
+                                                <div className="text-green-600 font-medium">
+                                                    + ${profitUSD.toFixed(2)} {lang === "en" ? "profit" : "أجور"}
                                                 </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white rounded-lg border-2 border-green-300 p-4 shadow-sm">
+                                        <div className="text-xs font-medium text-gray-600 mb-1">
+                                            {lang === "en" ? "In SYP:" : "بالليرة:"}
+                                        </div>
+                                        <div className="text-2xl font-bold text-green-700">
+                                            {totals.totalSYP.toFixed(2)} ل.س
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-2 space-y-1">
+                                            <div>{lang === "en" ? "Base:" : "الأساس:"} {totals.baseTotalSYP.toFixed(2)} ل.س</div>
+                                            {profitSYP > 0 && (
+                                                <div className="text-green-600 font-medium">
+                                                    + {profitSYP.toFixed(2)} ل.س {lang === "en" ? "profit" : "أجور"}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION 4: Payment Details */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5 text-teal-700" />
+                                <h3 className="text-lg font-semibold text-teal-900">
+                                    {lang === "en" ? "Payment Details" : "تفاصيل الدفع"}
+                                </h3>
+                            </div>
+                            <Separator className="bg-teal-100" />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Amount Paid */}
+                                <FormField
+                                    control={form.control}
+                                    name="amountPaid"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Amount Paid" : "المبلغ المدفوع"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </FormLabel>
+                                            <FormControl>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
-                                                    placeholder={lang === "en" ? "0.00" : "٠.٠٠"}
-                                                    className="pl-10"
+                                                    placeholder={currency === CurrencyType.USD ? "0.00 USD" : "٠.٠٠ ليرة"}
                                                     value={field.value || ""}
                                                     onChange={(e) => {
                                                         const value = parseFloat(e.target.value) || 0;
                                                         field.onChange(value);
                                                     }}
                                                 />
-                                            </div>
-                                        </FormControl>
-                                        <FormDescription>
-                                            {lang === "en"
-                                                ? "Additional profit amount in USD"
-                                                : "مبلغ أجور بالدولار"}
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Profit SYP (Read-only) */}
-                            <FormField
-                                control={form.control}
-                                name="profitSYP"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Profit (SYP)" : "أجور (ليرة)"}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                readOnly
-                                                className="bg-gray-50"
-                                                value={profitSYP.toFixed(2)}
-                                            />
-                                        </FormControl>
-                                        <FormDescription>
-                                            {lang === "en"
-                                                ? "Calculated automatically based on exchange rate"
-                                                : "محسوب تلقائياً بناءً على سعر الصرف"}
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Total Amount (Read-only) */}
-                            <div className="col-span-2">
-                                <FormItem>
-                                    <FormLabel className="text-base">
-                                        {lang === "en" ? "Total Amount (Including Profit)" : "المبلغ الإجمالي (بما في ذلك الربح)"}
-                                    </FormLabel>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="rounded-md border bg-muted p-3">
-                                            <div className="text-xs text-gray-500">
-                                                {lang === "en" ? "In USD:" : "بالدولار:"}
-                                            </div>
-                                            <div className="text-lg font-semibold">
-                                                ${totals.totalUSD.toFixed(2)}
-                                            </div>
-                                            <div className="text-xs text-gray-500">
-                                                {lang === "en" ? "Base:" : "الأساس:"} ${totals.baseTotalUSD.toFixed(2)}
-                                                {profitUSD > 0 && (
-                                                    <span className="text-green-600 ml-1">
-                                                        (+${profitUSD.toFixed(2)} profit)
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="rounded-md border bg-muted p-3">
-                                            <div className="text-xs text-gray-500">
-                                                {lang === "en" ? "In SYP:" : "بالليرة:"}
-                                            </div>
-                                            <div className="text-lg font-semibold">
-                                                {totals.totalSYP.toFixed(2)} ليرة
-                                            </div>
-                                            <div className="text-xs text-gray-500">
-                                                {lang === "en" ? "Base:" : "الأساس:"} {totals.baseTotalSYP.toFixed(2)} ليرة
-                                                {profitSYP > 0 && (
-                                                    <span className="text-green-600 ml-1">
-                                                        (+{profitSYP.toFixed(2)} ليرة profit)
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <FormDescription>
-                                        {lang === "en"
-                                            ? "Base price + profit amount, calculated automatically based on exchange rate"
-                                            : "السعر الأساسي + مبلغ الربح، محسوب تلقائياً بناءً على سعر الصرف"}
-                                    </FormDescription>
-                                </FormItem>
-                            </div>
-
-                            {/* Amount Paid */}
-                            <FormField
-                                control={form.control}
-                                name="amountPaid"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Amount Paid" : "المبلغ المدفوع"}
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                placeholder={currency === CurrencyType.USD ? "0.00 USD" : "٠.٠٠ ليرة"}
-                                                value={field.value || ""}
-                                                onChange={(e) => {
-                                                    const value = parseFloat(e.target.value) || 0;
-                                                    field.onChange(value);
-                                                }}
-                                            />
-                                        </FormControl>
-                                        {currentTotal > 0 && (
-                                            <FormDescription>
-                                                {field.value === currentTotal
-                                                    ? lang === "en" ? "Full payment" : "دفع كامل"
-                                                    : lang === "en"
-                                                        ? `Difference: ${(field.value - currentTotal).toFixed(2)} ${currency === CurrencyType.USD ? 'USD' : 'SYP'}`
-                                                        : `الفرق: ${(field.value - currentTotal).toFixed(2)} ${currency === CurrencyType.USD ? 'دولار' : 'ليرة'}`}
-                                            </FormDescription>
-                                        )}
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Payment Type */}
-                            <FormField
-                                control={form.control}
-                                name="paymentType"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {lang === "en" ? "Payment Type" : "طريقة الدفع"}
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder={lang === "en" ? "Select payment type" : "اختر طريقة الدفع"} />
-                                                </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
-                                                {paymentTypeOptions.map((option) => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                            {currentTotal > 0 && (
+                                                <FormDescription>
+                                                    {field.value === currentTotal
+                                                        ? <span className="text-green-600 font-medium">{lang === "en" ? "✓ Full payment" : "✓ دفع كامل"}</span>
+                                                        : lang === "en"
+                                                            ? `Difference: ${(field.value - currentTotal).toFixed(2)} ${currency === CurrencyType.USD ? 'USD' : 'SYP'}`
+                                                            : `الفرق: ${(field.value - currentTotal).toFixed(2)} ${currency === CurrencyType.USD ? 'دولار' : 'ليرة'}`}
+                                                </FormDescription>
+                                            )}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Payment Type */}
+                                <FormField
+                                    control={form.control}
+                                    name="paymentType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Payment Type" : "طريقة الدفع"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder={lang === "en" ? "Select payment type" : "اختر طريقة الدفع"} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {paymentTypeOptions.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* SECTION 5: Customer Information */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <User className="h-5 w-5 text-teal-700" />
+                                <h3 className="text-lg font-semibold text-teal-900">
+                                    {lang === "en" ? "Customer Information" : "معلومات العميل"}
+                                </h3>
+                                <Badge variant="secondary" className="ml-2 text-xs">
+                                    {lang === "en" ? "Optional" : "اختياري"}
+                                </Badge>
+                            </div>
+                            <Separator className="bg-teal-100" />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Customer Name */}
+                                <FormField
+                                    control={form.control}
+                                    name="customerName"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Customer Name" : "اسم العميل"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder={lang === "en" ? "Enter customer name" : "أدخل اسم العميل"}
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Customer Phone */}
+                                <FormField
+                                    control={form.control}
+                                    name="customerPhone"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Customer Phone" : "هاتف العميل"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder={lang === "en" ? "Enter customer phone" : "أدخل هاتف العميل"}
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* SECTION 6: Additional Notes */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-teal-700" />
+                                <h3 className="text-lg font-semibold text-teal-900">
+                                    {lang === "en" ? "Additional Notes" : "ملاحظات إضافية"}
+                                </h3>
+                                <Badge variant="secondary" className="ml-2 text-xs">
+                                    {lang === "en" ? "Optional" : "اختياري"}
+                                </Badge>
+                            </div>
+                            <Separator className="bg-teal-100" />
+                            
+                            {/* Description */}
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            {lang === "en" ? "Description" : "الوصف"}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder={lang === "en" ? "Enter any additional notes or details about this sale..." : "أدخل أي ملاحظات أو تفاصيل إضافية عن هذا البيع..."}
+                                                className="resize-none min-h-[100px]"
+                                                {...field}
+                                                value={field.value || ""}
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                         </div>
 
-                        {/* Customer Name */}
-                        <FormField
-                            control={form.control}
-                            name="customerName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        {lang === "en" ? "Customer Name (Optional)" : "اسم العميل (اختياري)"}
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={lang === "en" ? "Enter customer name" : "أدخل اسم العميل"}
-                                            {...field}
-                                            value={field.value || ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Customer Phone */}
-                        <FormField
-                            control={form.control}
-                            name="customerPhone"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        {lang === "en" ? "Customer Phone (Optional)" : "هاتف العميل (اختياري)"}
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={lang === "en" ? "Enter customer phone" : "أدخل هاتف العميل"}
-                                            {...field}
-                                            value={field.value || ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Description */}
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        {lang === "en" ? "Description (Optional)" : "الوصف (اختياري)"}
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder={lang === "en" ? "Enter any additional notes" : "أدخل أي ملاحظات إضافية"}
-                                            className="resize-none"
-                                            {...field}
-                                            value={field.value || ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
                         {/* Summary Section */}
-                        <div className="bg-gray-50 p-4 rounded-lg border">
-                            <h3 className="font-medium mb-2">
+                        <div className="bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 p-6 rounded-xl border-2 border-teal-200 shadow-md">
+                            <h3 className="font-semibold text-lg mb-4 text-teal-900 flex items-center gap-2">
+                                <Calculator className="h-5 w-5" />
                                 {lang === "en" ? "Sale Summary" : "ملخص البيع"}
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Gold Type:" : "نوع الذهب:"}</span>
-                                    <span className="font-medium ml-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-teal-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Gold Type:" : "نوع الذهب:"}</span>
+                                    <span className="font-semibold text-teal-900">
                                         {goldTypeOptions.find(opt => opt.value === goldType)?.label}
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Weight:" : "الوزن:"}</span>
-                                    <span className="font-medium ml-2">{weight.toFixed(2)}g</span>
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-teal-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Weight:" : "الوزن:"}</span>
+                                    <span className="font-semibold text-teal-900">{weight.toFixed(2)}g</span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Currency:" : "العملة:"}</span>
-                                    <span className="font-medium ml-2">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-teal-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Currency:" : "العملة:"}</span>
+                                    <span className="font-semibold text-teal-900">
                                         {currency === CurrencyType.USD ? "USD" : "SYP"}
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Base Price per Gram:" : "السعر الأساسي لكل جرام:"}</span>
-                                    <span className="font-medium ml-2">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Base Price/Gram:" : "السعر الأساسي/جرام:"}</span>
+                                    <span className="font-semibold text-blue-900">
                                         {currency === CurrencyType.USD
-                                            ? `${totals.pricePerGramUSD.toFixed(2)} USD`
-                                            : `${totals.pricePerGramSYP.toFixed(2)} SYP`}
+                                            ? `$${totals.pricePerGramUSD.toFixed(2)}`
+                                            : `${totals.pricePerGramSYP.toFixed(2)} ل.س`}
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Profit:" : "الربح:"}</span>
-                                    <span className="font-medium ml-2">
-                                        ${profitUSD!.toFixed(2)} / {profitSYP.toFixed(2)} ليرة
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-green-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Profit:" : "الأجور:"}</span>
+                                    <span className="font-semibold text-green-700">
+                                        ${profitUSD!.toFixed(2)} / {profitSYP.toFixed(2)} ل.س
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Total Amount:" : "المبلغ الإجمالي:"}</span>
-                                    <span className="font-medium ml-2">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-purple-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Total Amount:" : "المبلغ الإجمالي:"}</span>
+                                    <span className="font-bold text-purple-900">
                                         {currentTotal.toFixed(2)} {currency === CurrencyType.USD ? "USD" : "SYP"}
                                     </span>
                                 </div>
-                                <div>
-                                    <span className="text-gray-600">{lang === "en" ? "Amount Paid:" : "المبلغ المدفوع:"}</span>
-                                    <span className="font-medium ml-2">
+                                <div className="bg-white p-3 rounded-lg shadow-sm border border-teal-100">
+                                    <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Amount Paid:" : "المبلغ المدفوع:"}</span>
+                                    <span className="font-semibold text-teal-900">
                                         {amountPaid.toFixed(2)} {currency === CurrencyType.USD ? "USD" : "SYP"}
                                     </span>
                                 </div>
                                 {store && (
-                                    <div>
-                                        <span className="text-gray-600">{lang === "en" ? "Exchange Rate:" : "سعر الصرف:"}</span>
-                                        <span className="font-medium ml-2">
+                                    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
+                                        <span className="text-gray-600 block mb-1 text-xs">{lang === "en" ? "Exchange Rate:" : "سعر الصرف:"}</span>
+                                        <span className="font-semibold text-gray-900">
                                             1 USD = {typeof store.exchangeRateUSDtoSYP === 'number' ? store.exchangeRateUSDtoSYP.toFixed(2) : '0'} SYP
                                         </span>
                                     </div>
@@ -887,20 +958,21 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <div className="flex justify-end gap-4">
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-4 pt-6 border-t-2 border-gray-200">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={() => router.back()}
                                 disabled={isPending}
+                                className="min-w-[120px]"
                             >
                                 {lang === "en" ? "Cancel" : "إلغاء"}
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={isPending || (mode === "create" && (!hasSufficientInventory() || weight <= 0))}
-                                className="bg-teal-800 hover:bg-teal-800/80"
+                                className="bg-teal-700 hover:bg-teal-800 min-w-[120px] shadow-lg"
                             >
                                 {isPending && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

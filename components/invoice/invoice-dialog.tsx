@@ -1,12 +1,12 @@
-// components/invoice/invoice-dialog-simple.tsx - SIMPLIFIED VERSION
+// components/invoice/invoice-dialog-simple.tsx - PDF ONLY VERSION
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Loader2, Download, Printer, X, AlertCircle } from "lucide-react";
+import { Loader2, Printer, AlertCircle } from "lucide-react";
 import { useLangStore } from "@/store/lang-store";
-import { generateInvoiceHTML, printInvoicePDF, downloadInvoiceHTML } from "@/lib/html-invoice-generator-simple";
+import { generateInvoiceHTML, printInvoicePDF } from "@/lib/html-invoice-generator-simple";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -95,59 +95,59 @@ export function InvoiceDialog({ saleId, isOpen, onClose }: InvoiceDialogProps) {
         }
     };
 
-    const handleDownloadHTML = () => {
-        if (!invoiceData) return;
-        downloadInvoiceHTML(invoiceData);
-        toast.success(lang === "en" ? "Invoice downloaded" : "تم تنزيل الفاتورة");
-    };
-
     return (
         <Dialog open={isOpen} onOpenChange={(open) => {
             if (!open) onClose();
         }}>
             <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto" dir={lang === "ar" ? "rtl" : "ltr"}>
-                <DialogHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <DialogTitle>
-                            {lang === "en" ? "Invoice Preview" : "معاينة الفاتورة"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {lang === "en" ? "Print or download the invoice" : "طباعة أو تنزيل الفاتورة"}
-                        </DialogDescription>
-                    </div>
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-teal-900 flex items-center gap-2">
+                        <div className="p-2 bg-teal-100 rounded-lg">
+                            <Printer className="h-6 w-6 text-teal-700" />
+                        </div>
+                        {lang === "en" ? "Invoice Preview" : "معاينة الفاتورة"}
+                    </DialogTitle>
+                    <DialogDescription className="text-base">
+                        {lang === "en" ? "Review and print your invoice" : "مراجعة وطباعة الفاتورة"}
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="py-4">
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                            <p className="text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center py-16">
+                            <div className="relative">
+                                <Loader2 className="h-8 w-8 text-teal-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                            </div>
+                            <p className="text-teal-700 font-medium mt-6">
                                 {lang === "en" ? "Loading invoice..." : "جاري تحميل الفاتورة..."}
                             </p>
                         </div>
                     ) : error ? (
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>{error}</AlertDescription>
+                        <Alert variant="destructive" className="border-red-300 bg-red-50">
+                            <AlertCircle className="h-5 w-5 text-red-600" />
+                            <AlertDescription className="text-red-800 font-medium">{error}</AlertDescription>
                         </Alert>
                     ) : previewHtml ? (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {/* Preview iframe */}
-                            <div className="border rounded-lg overflow-hidden bg-gray-50">
+                            <div className="border-0 rounded-xs overflow-hidden shadow-lg bg-gray-50">
+                                <div className="bg-teal-700 text-white px-4 py-2 text-sm font-medium">
+                                    {lang === "en" ? "Invoice Preview" : "معاينة الفاتورة"}
+                                </div>
                                 <iframe
                                     srcDoc={previewHtml}
-                                    className="w-full"
+                                    className="w-full bg-white"
                                     style={{ height: '600px', border: 'none' }}
                                     title="Invoice Preview"
                                 />
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                            <div className="flex flex-col gap-4">
                                 <Button
                                     onClick={handlePrint}
                                     disabled={isLoading}
-                                    className="flex-1"
+                                    className="w-full bg-teal-700 hover:bg-teal-800 text-white shadow-lg"
                                     size="lg"
                                 >
                                     {isLoading ? (
@@ -155,36 +155,33 @@ export function InvoiceDialog({ saleId, isOpen, onClose }: InvoiceDialogProps) {
                                     ) : (
                                         <Printer className="mr-2 h-5 w-5" />
                                     )}
-                                    {lang === "en" ? "Print Invoice" : "طباعة الفاتورة"}
+                                    {lang === "en" ? "Print Invoice (Save as PDF)" : "طباعة الفاتورة (حفظ كـ PDF)"}
                                 </Button>
 
-                                <Button
-                                    onClick={handleDownloadHTML}
-                                    disabled={isLoading}
-                                    variant="outline"
-                                    className="flex-1"
-                                    size="lg"
-                                >
-                                    {isLoading ? (
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    ) : (
-                                        <Download className="mr-2 h-5 w-5" />
-                                    )}
-                                    {lang === "en" ? "Download HTML" : "تحميل HTML"}
-                                </Button>
+                                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                                    <div className="flex items-start gap-3">
+                                        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                        <div className="text-sm text-blue-900">
+                                            <p className="font-semibold mb-1">
+                                                {lang === "en" ? "💡 Quick Tip:" : "💡 نصيحة سريعة:"}
+                                            </p>
+                                            <p>
+                                                {lang === "en" 
+                                                    ? "In the print dialog, choose 'Save as PDF' as your printer to download the invoice as a PDF file."
+                                                    : "في نافذة الطباعة، اختر 'حفظ كـ PDF' كطابعة لتنزيل الفاتورة كملف PDF."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-                            <p className="text-xs text-center text-muted-foreground">
-                                {lang === "en" 
-                                    ? "Tip: Use Print to save as PDF or download HTML for editing"
-                                    : "نصيحة: استخدم الطباعة للحفظ كـ PDF أو تنزيل HTML للتعديل"
-                                }
-                            </p>
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">
+                        <div className="text-center py-16">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                                <AlertCircle className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <p className="text-gray-600 font-medium">
                                 {lang === "en" ? "No invoice data available" : "لا توجد بيانات فاتورة متاحة"}
                             </p>
                         </div>

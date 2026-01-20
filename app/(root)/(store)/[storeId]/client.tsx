@@ -27,7 +27,7 @@ function StoreDashboardPage({ storeId }: Props) {
                     </div>
                     <Skeleton className="h-6 w-20" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Card key={i}>
@@ -48,8 +48,8 @@ function StoreDashboardPage({ storeId }: Props) {
         return (
             <Alert variant="destructive">
                 <AlertDescription>
-                    {lang === "en" 
-                        ? "Failed to load store information. Please try again." 
+                    {lang === "en"
+                        ? "Failed to load store information. Please try again."
                         : "فشل في تحميل معلومات المتجر. يرجى المحاولة مرة أخرى."}
                 </AlertDescription>
             </Alert>
@@ -67,12 +67,12 @@ function StoreDashboardPage({ storeId }: Props) {
     const totalInventoryValueUSD = totalGoldValueUSD + store.currentUSD;
 
     // Calculate total gold weight
-    const totalGoldWeight = store.currentGold14 + store.currentGold18 + 
-                           store.currentGold21 + store.currentGold24;
+    const totalGoldWeight = store.currentGold14 + store.currentGold18 +
+        store.currentGold21 + store.currentGold24;
 
     // Calculate average gold price
-    const averageGoldPricePerGram = totalGoldWeight > 0 
-        ? totalGoldValueUSD / totalGoldWeight 
+    const averageGoldPricePerGram = totalGoldWeight > 0
+        ? totalGoldValueUSD / totalGoldWeight
         : 0;
 
     // Format currency
@@ -129,11 +129,11 @@ function StoreDashboardPage({ storeId }: Props) {
                         </div>
                     </div>
                 </div>
-                <Badge 
+                <Badge
                     variant={store.status === "ACTIVE" ? "default" : "secondary"}
                     className="text-sm px-3 py-1"
                 >
-                    {store.status === "ACTIVE" 
+                    {store.status === "ACTIVE"
                         ? lang === "en" ? "Active" : "نشط"
                         : lang === "en" ? "Inactive" : "غير نشط"
                     }
@@ -273,108 +273,124 @@ function StoreDashboardPage({ storeId }: Props) {
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* 24K Gold */}
-                            <div className="rounded-lg border p-4">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="font-semibold">24K Gold</h3>
+                            <div className="rounded-lg border p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+                                <div className={`flex  justify-between items-center mb-3`}>
+                                    <h3 className="font-semibold">{lang === "en" ? "24K Gold" : "ذهب عيار ٢٤"}</h3>
                                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                                         {formatWeight(store.currentGold24)}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Price:</span>
-                                        <div className="text-right">
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Price:" : "السعر:"}
+                                        </span>
+                                        <div className={`text-right ${lang === "ar" ? "text-left" : ""}`}>
                                             <div className="font-semibold">{formatCurrency(store.priceGold24USD, "USD")}/g</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Value:</span>
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Value:" : "القيمة:"}
+                                        </span>
                                         <div className="font-semibold">
                                             {formatCurrency(store.currentGold24 * store.priceGold24USD, "USD")}
                                         </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground text-right">
+                                    <div className={`text-xs text-muted-foreground ${lang === "ar" ? "text-left" : "text-right"}`}>
                                         ≈ {formatCurrency(store.currentGold24 * store.priceGold24USD * store.exchangeRateUSDtoSYP, "SYP")}
                                     </div>
                                 </div>
                             </div>
 
                             {/* 21K Gold */}
-                            <div className="rounded-lg border p-4">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="font-semibold">21K Gold</h3>
+                            <div className="rounded-lg border p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+                                <div className={`flex  justify-between items-center mb-3`}>
+                                    <h3 className="font-semibold">{lang === "en" ? "21K Gold" : "ذهب عيار ٢١"}</h3>
                                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                                         {formatWeight(store.currentGold21)}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Price:</span>
-                                        <div className="text-right">
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Price:" : "السعر:"}
+                                        </span>
+                                        <div className={`text-right ${lang === "ar" ? "text-left" : ""}`}>
                                             <div className="font-semibold">{formatCurrency(store.priceGold21USD, "USD")}/g</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Value:</span>
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Value:" : "القيمة:"}
+                                        </span>
                                         <div className="font-semibold">
                                             {formatCurrency(store.currentGold21 * store.priceGold21USD, "USD")}
                                         </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground text-right">
+                                    <div className={`text-xs text-muted-foreground ${lang === "ar" ? "text-left" : "text-right"}`}>
                                         ≈ {formatCurrency(store.currentGold21 * store.priceGold21USD * store.exchangeRateUSDtoSYP, "SYP")}
                                     </div>
                                 </div>
                             </div>
 
                             {/* 18K Gold */}
-                            <div className="rounded-lg border p-4">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="font-semibold">18K Gold</h3>
+                            <div className="rounded-lg border p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+                                <div className={`flex  justify-between items-center mb-3`}>
+                                    <h3 className="font-semibold">{lang === "en" ? "18K Gold" : "ذهب عيار ١٨"}</h3>
                                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                                         {formatWeight(store.currentGold18)}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Price:</span>
-                                        <div className="text-right">
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Price:" : "السعر:"}
+                                        </span>
+                                        <div className={`text-right ${lang === "ar" ? "text-left" : ""}`}>
                                             <div className="font-semibold">{formatCurrency(store.priceGold18USD, "USD")}/g</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Value:</span>
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Value:" : "القيمة:"}
+                                        </span>
                                         <div className="font-semibold">
                                             {formatCurrency(store.currentGold18 * store.priceGold18USD, "USD")}
                                         </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground text-right">
+                                    <div className={`text-xs text-muted-foreground ${lang === "ar" ? "text-left" : "text-right"}`}>
                                         ≈ {formatCurrency(store.currentGold18 * store.priceGold18USD * store.exchangeRateUSDtoSYP, "SYP")}
                                     </div>
                                 </div>
                             </div>
 
                             {/* 14K Gold */}
-                            <div className="rounded-lg border p-4">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="font-semibold">14K Gold</h3>
+                            <div className="rounded-lg border p-4" dir={lang === "ar" ? "rtl" : "ltr"}>
+                                <div className={`flex  justify-between items-center mb-3`}>
+                                    <h3 className="font-semibold">{lang === "en" ? "14K Gold" : "ذهب عيار ١٤"}</h3>
                                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                                         {formatWeight(store.currentGold14)}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Price:</span>
-                                        <div className="text-right">
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Price:" : "السعر:"}
+                                        </span>
+                                        <div className={`text-right ${lang === "ar" ? "text-left" : ""}`}>
                                             <div className="font-semibold">{formatCurrency(store.priceGold14USD, "USD")}/g</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Value:</span>
+                                    <div className={`flex  justify-between items-center`}>
+                                        <span className="text-sm text-muted-foreground">
+                                            {lang === "en" ? "Value:" : "القيمة:"}
+                                        </span>
                                         <div className="font-semibold">
                                             {formatCurrency(store.currentGold14 * store.priceGold14USD, "USD")}
                                         </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground text-right">
+                                    <div className={`text-xs text-muted-foreground ${lang === "ar" ? "text-left" : "text-right"}`}>
                                         ≈ {formatCurrency(store.currentGold14 * store.priceGold14USD * store.exchangeRateUSDtoSYP, "SYP")}
                                     </div>
                                 </div>
@@ -403,7 +419,7 @@ function StoreDashboardPage({ storeId }: Props) {
                                 <p className="font-medium">{store.address}</p>
                                 <p className="text-sm text-muted-foreground">{store.city}</p>
                             </div>
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
                                     <Phone className="h-3 w-3" />
@@ -451,9 +467,9 @@ function StoreDashboardPage({ storeId }: Props) {
                                 <div className="font-semibold">{formatCurrency(totalGoldValueUSD, "USD")}</div>
                             </div>
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div>
                             <h4 className="text-sm font-medium text-muted-foreground mb-2">
                                 {lang === "en" ? "Currency Breakdown" : "توزيع العملات"}
@@ -483,7 +499,7 @@ function StoreDashboardPage({ storeId }: Props) {
                         {((totalGoldValueUSD / totalInventoryValueUSD) * 100).toFixed(1)}%
                     </div>
                 </div>
-                
+
                 <div className="rounded-lg border p-4 text-center">
                     <div className="text-sm font-medium text-muted-foreground mb-1">
                         {lang === "en" ? "Cash/Asset Ratio" : "نسبة النقود"}
@@ -492,7 +508,7 @@ function StoreDashboardPage({ storeId }: Props) {
                         {((store.currentUSD / totalInventoryValueUSD) * 100).toFixed(1)}%
                     </div>
                 </div>
-                
+
                 <div className="rounded-lg border p-4 text-center">
                     <div className="text-sm font-medium text-muted-foreground mb-1">
                         {lang === "en" ? "Last Updated" : "آخر تحديث"}
@@ -501,7 +517,7 @@ function StoreDashboardPage({ storeId }: Props) {
                         {formatDate(store.updatedAt, lang, "short")}
                     </div>
                 </div>
-                
+
                 <div className="rounded-lg border p-4 text-center">
                     <div className="text-sm font-medium text-muted-foreground mb-1">
                         {lang === "en" ? "Store ID" : "معرف المتجر"}

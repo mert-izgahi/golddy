@@ -1,4 +1,4 @@
-// lib/html-invoice-generator-simple.ts - SIMPLIFIED VERSION
+// lib/html-invoice-generator-simple.ts - SIMPLIFIED VERSION WITH LOGO
 import { Sale, Store } from "@/lib/generated/prisma/client";
 
 interface InvoiceData {
@@ -28,7 +28,7 @@ const formatPaymentType = (paymentType: string, lang: 'en' | 'ar' = 'en') => {
 
 const formatCurrency = (amount: number, currency: string, lang: 'en' | 'ar' = 'en') => {
     if (currency === 'USD') {
-        return `${amount.toFixed(2)} USD`;
+        return `$${amount.toFixed(2)}`;
     } else {
         return lang === 'en' ? `${amount.toFixed(0)} SYP` : `${amount.toFixed(0)} ل.س`;
     }
@@ -47,7 +47,7 @@ const formatDate = (dateString: string | Date, lang: 'en' | 'ar' = 'en'): string
     } else {
         return new Intl.DateTimeFormat('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -55,7 +55,7 @@ const formatDate = (dateString: string | Date, lang: 'en' | 'ar' = 'en'): string
     }
 };
 
-// HTML Template
+// Simplified HTML Template with Clean Design
 const getInvoiceTemplate = (): string => {
     return `<!DOCTYPE html>
 <html lang="{{LANG}}" dir="{{DIR}}">
@@ -67,18 +67,19 @@ const getInvoiceTemplate = (): string => {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         @media print {
-            body { margin: 0; padding: 0; }
+            body { margin: 0; padding: 0; background: white; }
             .no-print { display: none !important; }
             .invoice-container { box-shadow: none; margin: 0; padding: 15mm; }
             @page { size: A4; margin: 0; }
         }
         
         body {
-            font-family: 'Arial', sans-serif;
-            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
             padding: 10px;
             font-size: 12px;
             line-height: 1.4;
+            color: #333;
         }
         
         .invoice-container {
@@ -86,78 +87,114 @@ const getInvoiceTemplate = (): string => {
             margin: 0 auto;
             background: white;
             padding: 15mm;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
         }
         
-        .invoice-header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #333;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        
+        .store-info {
+            flex: 1;
+        }
+        
+        .store-logo {
+            max-height: 60px;
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        
+        .store-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .store-details {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+        
+        .invoice-info {
+            text-align: right;
+        }
+        
+        [dir="rtl"] .invoice-info {
+            text-align: left;
         }
         
         .invoice-title {
             font-size: 24px;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+            color: #2c3e50;
+            margin-bottom: 10px;
         }
         
         .invoice-number {
             font-size: 14px;
             color: #666;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         
         .invoice-date {
-            font-size: 11px;
+            font-size: 12px;
             color: #999;
         }
         
-        .info-row {
+        .content-row {
             display: flex;
-            justify-content: space-between;
             gap: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .info-box {
             flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
         }
         
-        .info-box-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-            text-transform: uppercase;
+        .box-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
             border-bottom: 1px solid #ddd;
-            padding-bottom: 3px;
         }
         
         .info-line {
-            font-size: 11px;
+            font-size: 12px;
             color: #555;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
         
         .info-line strong {
-            color: #333;
+            color: #2c3e50;
         }
         
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 20px 0;
         }
         
         .details-table th {
-            background: #f5f5f5;
-            padding: 8px;
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 10px;
             text-align: left;
-            font-size: 11px;
-            font-weight: bold;
-            border: 1px solid #ddd;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #dee2e6;
         }
         
         [dir="rtl"] .details-table th {
@@ -165,23 +202,26 @@ const getInvoiceTemplate = (): string => {
         }
         
         .details-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            font-size: 11px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            font-size: 12px;
         }
         
         [dir="rtl"] .details-table td {
             text-align: right;
         }
         
-        .summary-section {
-            margin-top: 15px;
-            margin-left: auto;
-            width: 50%;
-            min-width: 250px;
+        .details-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
         }
         
-        [dir="rtl"] .summary-section {
+        .summary {
+            margin-top: 20px;
+            width: 50%;
+            margin-left: auto;
+        }
+        
+        [dir="rtl"] .summary {
             margin-left: 0;
             margin-right: auto;
         }
@@ -189,110 +229,115 @@ const getInvoiceTemplate = (): string => {
         .summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
-            font-size: 11px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
         }
         
         .summary-row.total {
-            border-top: 2px solid #333;
-            border-bottom: 2px solid #333;
-            padding: 8px 0;
-            margin-top: 5px;
-            font-size: 13px;
             font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+            padding-top: 10px;
+            border-top: 2px solid #2c3e50;
         }
         
         .summary-row.paid {
-            margin-top: 5px;
-            font-weight: bold;
+            font-weight: 600;
+            color: #27ae60;
+        }
+        
+        .summary-row.balance {
+            color: #e74c3c;
         }
         
         .summary-label {
-            color: #555;
+            color: #666;
         }
         
         .summary-value {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
         }
         
-        .exchange-note {
-            font-size: 9px;
-            color: #888;
-            font-style: italic;
-            margin-top: 5px;
+        .currency-note {
+            font-size: 11px;
+            color: #999;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
             text-align: center;
         }
         
-        .syp-compact {
-            margin-top: 10px;
-            padding: 8px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            font-size: 10px;
-        }
-        
-        .syp-compact-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .syp-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-        }
-        
-        .notes-section {
-            margin-top: 15px;
-            padding: 8px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-        }
-        
-        .notes-title {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .notes-content {
-            font-size: 10px;
-            color: #555;
-            line-height: 1.5;
-        }
-        
-        .invoice-footer {
-            margin-top: 15px;
-            padding-top: 8px;
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
             border-top: 1px solid #ddd;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             color: #999;
+        }
+        
+        .thank-you {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .compact-section {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        
+        .compact-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .compact-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .compact-row.total {
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+            margin-top: 6px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
     <div class="invoice-container">
-        <div class="invoice-header">
-            <div class="invoice-title">{{TITLE}}</div>
-            <div class="invoice-number">{{INVOICE_NUMBER_LABEL}} {{INVOICE_NUMBER}}</div>
-            <div class="invoice-date">{{DATE}}</div>
+        <div class="header">
+            <div class="store-info">
+                {{LOGO_HTML}}
+                <div class="store-name">{{STORE_NAME}}</div>
+                <div class="store-details">
+                    {{STORE_ADDRESS}}
+                    {{STORE_CITY}}
+                    {{STORE_PHONE}}
+                </div>
+            </div>
+            <div class="invoice-info">
+                <div class="invoice-title">{{TITLE}}</div>
+                <div class="invoice-number">{{INVOICE_NUMBER_LABEL}} {{INVOICE_NUMBER}}</div>
+                <div class="invoice-date">{{DATE}}</div>
+            </div>
         </div>
         
-        <div class="info-row">
+        <div class="content-row">
             <div class="info-box">
-                <div class="info-box-title">{{STORE_HEADER}}</div>
-                <div class="info-line"><strong>{{STORE_NAME}}</strong></div>
-                {{STORE_ADDRESS}}
-                {{STORE_CITY}}
-                {{STORE_PHONE}}
-            </div>
-            
-            <div class="info-box">
-                <div class="info-box-title">{{CUSTOMER_HEADER}}</div>
+                <div class="box-title">{{CUSTOMER_HEADER}}</div>
                 <div class="info-line"><strong>{{CUSTOMER_NAME}}</strong></div>
                 {{CUSTOMER_PHONE}}
                 <div class="info-line">{{PAYMENT_TYPE_LABEL}}: <strong>{{PAYMENT_TYPE}}</strong></div>
@@ -310,23 +355,21 @@ const getInvoiceTemplate = (): string => {
             </thead>
             <tbody>
                 <tr>
-                    <td>{{GOLD_TYPE}}</td>
+                    <td><strong>{{GOLD_TYPE}}</strong></td>
                     <td>{{WEIGHT}}</td>
                     <td>{{PRICE_PER_GRAM}}</td>
                     <td><strong>{{BASE_AMOUNT}}</strong></td>
                 </tr>
+                {{PROFIT_ROW}}
             </tbody>
         </table>
         
-        <div class="summary-section">
+        <div class="summary">
             <div class="summary-row">
                 <span class="summary-label">{{BASE_AMOUNT_LABEL}}:</span>
                 <span class="summary-value">{{BASE_AMOUNT}}</span>
             </div>
-            <div class="summary-row">
-                <span class="summary-label">{{PROFIT_LABEL}}:</span>
-                <span class="summary-value">{{PROFIT_AMOUNT}}</span>
-            </div>
+            {{PROFIT_SUMMARY}}
             <div class="summary-row total">
                 <span class="summary-label">{{TOTAL_LABEL}}:</span>
                 <span class="summary-value">{{TOTAL_AMOUNT}}</span>
@@ -338,13 +381,15 @@ const getInvoiceTemplate = (): string => {
             {{BALANCE_ROW}}
         </div>
         
-        <div class="exchange-note">{{EXCHANGE_RATE_NOTE}}</div>
+        <div class="currency-note">
+            {{EXCHANGE_RATE_NOTE}}
+        </div>
         
         {{SYP_SECTION}}
         {{NOTES_SECTION}}
         
-        <div class="invoice-footer">
-            <div>{{FOOTER_MESSAGE}}</div>
+        <div class="footer">
+            <div class="thank-you">{{FOOTER_MESSAGE}}</div>
             <div>{{FOOTER_DATE}}</div>
         </div>
     </div>
@@ -358,6 +403,11 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
 
     let template = getInvoiceTemplate();
 
+    // Calculations
+    const baseAmountUSD = sale.weight * sale.pricePerGramUSD;
+    const profitUSD = sale.profitUSD || 0;
+    const totalUSD = baseAmountUSD + profitUSD;
+
     // Basic replacements
     const replacements: Record<string, string> = {
         '{{LANG}}': lang,
@@ -368,7 +418,6 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
         '{{DATE}}': formatDate(sale.createdAt, lang),
         
         // Store info
-        '{{STORE_HEADER}}': isArabic ? 'معلومات المتجر' : 'Store Information',
         '{{STORE_NAME}}': sale.store.name,
         
         // Customer info
@@ -390,11 +439,9 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
         
         // Financial
         '{{BASE_AMOUNT_LABEL}}': isArabic ? 'المبلغ الأساسي' : 'Base Amount',
-        '{{BASE_AMOUNT}}': formatCurrency(sale.totalUSD - sale.profitUSD, 'USD', lang),
-        '{{PROFIT_LABEL}}': isArabic ? 'الربح' : 'Profit',
-        '{{PROFIT_AMOUNT}}': `+${formatCurrency(sale.profitUSD, 'USD', lang)}`,
+        '{{BASE_AMOUNT}}': formatCurrency(baseAmountUSD, 'USD', lang),
         '{{TOTAL_LABEL}}': isArabic ? 'المبلغ الإجمالي' : 'Total Amount',
-        '{{TOTAL_AMOUNT}}': formatCurrency(sale.totalUSD, 'USD', lang),
+        '{{TOTAL_AMOUNT}}': formatCurrency(totalUSD, 'USD', lang),
         '{{PAID_LABEL}}': isArabic ? 'المبلغ المدفوع' : 'Amount Paid',
         '{{PAID_AMOUNT}}': formatCurrency(sale.amountPaid, sale.currency, lang),
         
@@ -405,30 +452,37 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
         
         // Footer
         '{{FOOTER_MESSAGE}}': isArabic 
-            ? 'شكراً لتعاملكم! يرجى الاحتفاظ بهذه الفاتورة للسجلات.'
-            : 'Thank you for your business! Please keep this invoice for your records.',
+            ? 'شكراً لتعاملكم معنا'
+            : 'Thank you for your business',
         '{{FOOTER_DATE}}': isArabic
             ? `تم الإنشاء في ${new Date().toLocaleDateString('ar-SA')}`
             : `Generated on ${new Date().toLocaleDateString('en-US')}`,
     };
 
+    // Store logo (if available)
+    if (sale.store.logoUrl) {
+        replacements['{{LOGO_HTML}}'] = `<img src="${sale.store.logoUrl}" alt="${sale.store.name}" class="store-logo">`;
+    } else {
+        replacements['{{LOGO_HTML}}'] = '';
+    }
+
     // Store address (optional)
     if (sale.store.address) {
-        replacements['{{STORE_ADDRESS}}'] = `<div class="info-line">${sale.store.address}</div>`;
+        replacements['{{STORE_ADDRESS}}'] = `<div>${sale.store.address}</div>`;
     } else {
         replacements['{{STORE_ADDRESS}}'] = '';
     }
 
     // Store city (optional)
     if (sale.store.city) {
-        replacements['{{STORE_CITY}}'] = `<div class="info-line">${sale.store.city}</div>`;
+        replacements['{{STORE_CITY}}'] = `<div>${sale.store.city}</div>`;
     } else {
         replacements['{{STORE_CITY}}'] = '';
     }
 
     // Store phone (optional)
     if (sale.store.primaryPhoneNumber) {
-        replacements['{{STORE_PHONE}}'] = `<div class="info-line">${isArabic ? 'هاتف' : 'Tel'}: ${sale.store.primaryPhoneNumber}</div>`;
+        replacements['{{STORE_PHONE}}'] = `<div>${isArabic ? 'هاتف' : 'Tel'}: ${sale.store.primaryPhoneNumber}</div>`;
     } else {
         replacements['{{STORE_PHONE}}'] = '';
     }
@@ -440,15 +494,35 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
         replacements['{{CUSTOMER_PHONE}}'] = '';
     }
 
+    // Profit row in table (if any profit)
+    if (profitUSD > 0) {
+        replacements['{{PROFIT_ROW}}'] = `
+            <tr>
+                <td><strong>${isArabic ? 'الأجور' : 'Profit'}</strong></td>
+                <td></td>
+                <td></td>
+                <td><strong>+ ${formatCurrency(profitUSD, 'USD', lang)}</strong></td>
+            </tr>`;
+        
+        replacements['{{PROFIT_SUMMARY}}'] = `
+            <div class="summary-row">
+                <span class="summary-label">${isArabic ? 'الأجور' : 'Profit'}:</span>
+                <span class="summary-value">+ ${formatCurrency(profitUSD, 'USD', lang)}</span>
+            </div>`;
+    } else {
+        replacements['{{PROFIT_ROW}}'] = '';
+        replacements['{{PROFIT_SUMMARY}}'] = '';
+    }
+
     // Balance row (if applicable)
-    const balance = sale.amountPaid - sale.totalUSD;
+    const balance = sale.amountPaid - totalUSD;
     if (Math.abs(balance) > 0.01) {
         const balanceLabel = balance > 0 
             ? (isArabic ? 'الباقي' : 'Change')
             : (isArabic ? 'المتبقي' : 'Balance Due');
         
         replacements['{{BALANCE_ROW}}'] = `
-            <div class="summary-row" style="color: ${balance > 0 ? '#059669' : '#dc2626'};">
+            <div class="summary-row balance">
                 <span class="summary-label">${balanceLabel}:</span>
                 <span class="summary-value">${formatCurrency(Math.abs(balance), sale.currency, lang)}</span>
             </div>`;
@@ -457,22 +531,22 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
     }
 
     // SYP Section (compact)
-    const syrBase = ((sale.totalUSD - sale.profitUSD) * sale.store.exchangeRateUSDtoSYP).toFixed(0);
-    const syrProfit = (sale.profitUSD * sale.store.exchangeRateUSDtoSYP).toFixed(0);
-    const syrTotal = (sale.totalUSD * sale.store.exchangeRateUSDtoSYP).toFixed(0);
+    const syrBase = (baseAmountUSD * sale.store.exchangeRateUSDtoSYP).toFixed(0);
+    const syrProfit = (profitUSD * sale.store.exchangeRateUSDtoSYP).toFixed(0);
+    const syrTotal = (totalUSD * sale.store.exchangeRateUSDtoSYP).toFixed(0);
     
     replacements['{{SYP_SECTION}}'] = `
-        <div class="syp-compact">
-            <div class="syp-compact-title">${isArabic ? 'المبلغ بالليرة السورية' : 'Amount in Syrian Pounds'}</div>
-            <div class="syp-row">
-                <span>${isArabic ? 'المبلغ الأساسي' : 'Base'}:</span>
+        <div class="compact-section">
+            <div class="compact-title">${isArabic ? 'المبلغ بالليرة السورية' : 'Amount in Syrian Pounds'}</div>
+            <div class="compact-row">
+                <span>${isArabic ? 'المبلغ الأساسي' : 'Base Amount'}:</span>
                 <strong>${syrBase} ${isArabic ? 'ل.س' : 'SYP'}</strong>
             </div>
-            <div class="syp-row">
-                <span>${isArabic ? 'الربح' : 'Profit'}:</span>
-                <strong>+${syrProfit} ${isArabic ? 'ل.س' : 'SYP'}</strong>
-            </div>
-            <div class="syp-row" style="font-weight: bold; margin-top: 3px; padding-top: 3px; border-top: 1px solid #ddd;">
+            ${profitUSD > 0 ? `<div class="compact-row">
+                <span>${isArabic ? 'الأجور' : 'Profit'}:</span>
+                <strong>+ ${syrProfit} ${isArabic ? 'ل.س' : 'SYP'}</strong>
+            </div>` : ''}
+            <div class="compact-row total">
                 <span>${isArabic ? 'الإجمالي' : 'Total'}:</span>
                 <strong>${syrTotal} ${isArabic ? 'ل.س' : 'SYP'}</strong>
             </div>
@@ -481,9 +555,11 @@ export const generateInvoiceHTML = (invoiceData: InvoiceData): string => {
     // Notes section (optional)
     if (sale.description) {
         replacements['{{NOTES_SECTION}}'] = `
-            <div class="notes-section">
-                <div class="notes-title">${isArabic ? 'ملاحظات' : 'Notes'}</div>
-                <div class="notes-content">${sale.description}</div>
+            <div class="compact-section" style="margin-top: 10px;">
+                <div class="compact-title">${isArabic ? 'ملاحظات' : 'Notes'}</div>
+                <div style="font-size: 11px; color: #555; line-height: 1.3;">
+                    ${sale.description}
+                </div>
             </div>`;
     } else {
         replacements['{{NOTES_SECTION}}'] = '';

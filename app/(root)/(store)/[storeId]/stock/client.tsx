@@ -23,7 +23,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getGoldTypeLabel } from '@/lib/utils';
+import { cn, getGoldTypeLabel } from '@/lib/utils';
 
 interface Props {
     storeId: string;
@@ -49,7 +49,7 @@ function StockPage({ storeId }: Props) {
             toast.success(lang === "en" ? "Stock movement deleted successfully" : "تم حذف حركة المخزون بنجاح");
         } catch (error: any) {
             toast.error(
-                error?.response?.data?.message || 
+                error?.response?.data?.message ||
                 (lang === "en" ? "Failed to delete stock movement" : "فشل في حذف حركة المخزون")
             );
         }
@@ -256,7 +256,11 @@ function StockPage({ storeId }: Props) {
                     </Card>
 
                     <Card>
-                        <CardHeader className="pb-2">
+                        <CardHeader className={cn("pb-2",
+                            {
+                                "flex-row-reverse": lang === "ar"
+                            }
+                        )}>
                             <CardTitle className="text-sm font-medium flex items-center">
                                 <TrendingDown className="h-4 w-4 mr-2 text-red-600" />
                                 {lang === "en" ? "Total Removals" : "إجمالي السحوبات"}
@@ -309,7 +313,7 @@ function StockPage({ storeId }: Props) {
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {Object.entries(stockStats.currentStock).map(([goldType, quantity]) => (
-                                <div key={goldType} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+                                <div key={goldType} className="flex flex-col items-center justify-center p-4 border rounded-xs bg-gradient-to-br">
                                     <span className="text-sm text-muted-foreground font-medium">
                                         {getGoldTypeLabel(lang, goldType)}
                                     </span>
@@ -340,7 +344,11 @@ function StockPage({ storeId }: Props) {
                 <TabsContent value="movements" className="space-y-4">
                     {/* Stock Movements DataTable */}
                     <Card>
-                        <CardHeader>
+                        <CardHeader className={cn("flex items-center",
+                            {
+                                "flex-row-reverse": lang === "ar"
+                            }
+                        )}>
                             <CardTitle>{lang === "en" ? "Recent Movements" : "الحركات الأخيرة"}</CardTitle>
                             <CardDescription>
                                 {lang === "en" ? "All stock additions and removals" : "جميع إضافات وسحوبات المخزون"}
@@ -369,7 +377,11 @@ function StockPage({ storeId }: Props) {
                     ) : (
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader>
+                                <CardHeader className={cn('flex',
+                                    {
+                                        "flex-row-reverse": lang === "ar"
+                                    }
+                                )}>
                                     <CardTitle>{lang === "en" ? "Detailed Statistics" : "إحصائيات مفصلة"}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
