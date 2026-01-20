@@ -86,7 +86,7 @@ function Sidebar() {
     const settingsLinks = [
         {
             label: lang === "en" ? "Store Settings" : "إعدادات المتجر",
-            href: `/${store?.id}/store-settings`,
+            href: `/${store?.id}/settings`,
             icon: <StoreIcon size={12} />,
             isActive: pathname === `/${store?.id}/settings`,
         },

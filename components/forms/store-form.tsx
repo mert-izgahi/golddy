@@ -153,16 +153,16 @@ export default function StoreForm({
         const gold18 = form.watch("currentGold18") || 0;
         const gold21 = form.watch("currentGold21") || 0;
         const gold24 = form.watch("currentGold24") || 0;
-        
+
         const price14 = form.watch("priceGold14USD") || 0;
         const price18 = form.watch("priceGold18USD") || 0;
         const price21 = form.watch("priceGold21USD") || 0;
         const price24 = form.watch("priceGold24USD") || 0;
-        
+
         const totalGoldWeight = gold14 + gold18 + gold21 + gold24;
         const totalGoldValue = (gold14 * price14) + (gold18 * price18) + (gold21 * price21) + (gold24 * price24);
         const totalCash = (form.watch("currentUSD") || 0) + ((form.watch("currentSYP") || 0) / (form.watch("exchangeRateUSDtoSYP") || 1));
-        
+
         return {
             totalGoldWeight,
             totalGoldValue,
@@ -230,7 +230,7 @@ export default function StoreForm({
                                     {totals.totalGoldWeight.toFixed(2)}g
                                 </div>
                             </div>
-                            
+
                             <div className="rounded-lg border bg-white p-4 text-center">
                                 <div className="text-sm font-medium text-gray-600 mb-1">
                                     {lang === "en" ? "Gold Value" : "قيمة الذهب"}
@@ -239,7 +239,7 @@ export default function StoreForm({
                                     ${totals.totalGoldValue.toFixed(2)}
                                 </div>
                             </div>
-                            
+
                             <div className="rounded-lg border bg-white p-4 text-center">
                                 <div className="text-sm font-medium text-gray-600 mb-1">
                                     {lang === "en" ? "Cash Balance" : "رصيد النقد"}
@@ -248,7 +248,7 @@ export default function StoreForm({
                                     ${totals.totalCash.toFixed(2)}
                                 </div>
                             </div>
-                            
+
                             <div className="rounded-lg border bg-white p-4 text-center">
                                 <div className="text-sm font-medium text-gray-600 mb-1">
                                     {lang === "en" ? "Total Inventory" : "إجمالي المخزون"}
@@ -260,7 +260,7 @@ export default function StoreForm({
                         </div>
 
                         {/* Tabs Navigation */}
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <Tabs dir={lang === "en" ? "ltr" : "rtl"} value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid grid-cols-4 mb-6">
                                 <TabsTrigger value="basic" className="flex items-center gap-2">
                                     <Building2 className="h-4 w-4" />
@@ -288,7 +288,7 @@ export default function StoreForm({
                                         control={form.control}
                                         name="name"
                                         render={({ field }) => (
-                                            <FormItem>
+                                            <FormItem className="md:col-span-2">
                                                 <FormLabel>
                                                     {lang === "en" ? "Store Name" : "اسم المتجر"}
                                                     <span className="text-red-500 ml-1">*</span>
@@ -303,43 +303,17 @@ export default function StoreForm({
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Status */}
-                                    <FormField
-                                        control={form.control}
-                                        name="status"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    {lang === "en" ? "Status" : "الحالة"}
-                                                    <span className="text-red-500 ml-1">*</span>
-                                                </FormLabel>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    value={field.value}
-                                                    defaultValue={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder={lang === "en" ? "Select status" : "اختر الحالة"} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {statusOptions.map((option) => (
-                                                            <SelectItem key={option.value} value={option.value}>
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className={`h-2 w-2 rounded-full ${option.color.split(' ')[0]}`} />
-                                                                    {option.label}
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
+                                    <div className="flex flex-col gap-2">
+                                        <h2>
+                                            {lang === "en" ? "Store Address" : "عنوان المتجر"}
+                                            <span className="text-red-500 ml-1">*</span>
+                                        </h2>
+                                        <p>
+                                            {lang === "en"
+                                                ? "Please enter the address of the store"
+                                                : "يرجى ادخال عنوان المتجر"}
+                                        </p>
+                                    </div>
                                     {/* Address */}
                                     <FormField
                                         control={form.control}
@@ -366,7 +340,7 @@ export default function StoreForm({
                                         control={form.control}
                                         name="city"
                                         render={({ field }) => (
-                                            <FormItem>
+                                            <FormItem className="md:col-span-2">
                                                 <FormLabel>
                                                     {lang === "en" ? "City" : "المدينة"}
                                                 </FormLabel>
@@ -382,47 +356,7 @@ export default function StoreForm({
                                         )}
                                     />
 
-                                    {/* Primary Phone */}
-                                    <FormField
-                                        control={form.control}
-                                        name="primaryPhoneNumber"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    {lang === "en" ? "Primary Phone" : "الهاتف الرئيسي"}
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder={lang === "en" ? "Enter primary phone" : "أدخل الهاتف الرئيسي"}
-                                                        {...field}
-                                                        value={field.value || ""}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
 
-                                    {/* Secondary Phone */}
-                                    <FormField
-                                        control={form.control}
-                                        name="secondaryPhoneNumber"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    {lang === "en" ? "Secondary Phone" : "الهاتف الثانوي"}
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder={lang === "en" ? "Enter secondary phone" : "أدخل الهاتف الثانوي"}
-                                                        {...field}
-                                                        value={field.value || ""}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
 
                                     {/* Logo URL */}
                                     <FormField
@@ -450,7 +384,66 @@ export default function StoreForm({
                                             </FormItem>
                                         )}
                                     />
+
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-2">
+                                            <h2>
+                                                {lang === "en" ? "Contact Information" : "معلومات الاتصال"}
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </h2>
+                                            <p>
+                                                {lang === "en"
+                                                    ? "Please enter the contact information of the store"
+                                                    : "يرجى ادخال معلومات الاتصال للمتجر"}
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Primary Phone */}
+                                            <FormField
+                                                control={form.control}
+                                                name="primaryPhoneNumber"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            {lang === "en" ? "Primary Phone" : "الهاتف الرئيسي"}
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder={lang === "en" ? "Enter primary phone" : "أدخل الهاتف الرئيسي"}
+                                                                {...field}
+                                                                value={field.value || ""}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            {/* Secondary Phone */}
+                                            <FormField
+                                                control={form.control}
+                                                name="secondaryPhoneNumber"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            {lang === "en" ? "Secondary Phone" : "الهاتف الثانوي"}
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder={lang === "en" ? "Enter secondary phone" : "أدخل الهاتف الثانوي"}
+                                                                {...field}
+                                                                value={field.value || ""}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
                             </TabsContent>
 
                             {/* Inventory Tab */}
@@ -862,7 +855,7 @@ export default function StoreForm({
                                     {lang === "en" ? "Next" : "التالي"}
                                 </Button>
                             </div>
-                            
+
                             <div className="flex gap-4">
                                 <Button
                                     type="button"
