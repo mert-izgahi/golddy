@@ -109,6 +109,10 @@ model Sale {
   store    Store   @relation(fields: [storeId], references: [id])
   storeId  String
 
+  // Additional fields
+  profitUSD Float
+  profitSYP Float
+
   @@index([storeId, createdAt])
   @@index([invoiceNumber])
   @@index([reportId])

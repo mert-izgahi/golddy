@@ -12,10 +12,6 @@ export interface CurrentPrices {
   priceGold18USD: number;
   priceGold21USD: number;
   priceGold24USD: number;
-  priceGold14SYP: number;
-  priceGold18SYP: number;
-  priceGold21SYP: number;
-  priceGold24SYP: number;
   exchangeRateUSDtoSYP: number;
 }
 

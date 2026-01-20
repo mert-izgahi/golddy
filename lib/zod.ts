@@ -118,12 +118,6 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
         lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
     const positiveMessage =
         lang === "en" ? "Must be greater than 0" : "يجب أن يكون أكبر من 0";
-    const invalidGoldType =
-        lang === "en" ? "Invalid gold type" : "نوع الذهب غير صالح";
-    const invalidCurrency =
-        lang === "en" ? "Invalid currency" : "العملة غير صالحة";
-    const invalidPaymentType =
-        lang === "en" ? "Invalid payment type" : "طريقة الدفع غير صالحة";
 
     return z.object({
         weight: z
@@ -156,6 +150,14 @@ export const getCreateSaleSchema = (lang: "en" | "ar") => {
             .enum(PaymentType),
 
         amountPaid: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
+        profitUSD: z
+            .number(requiredMessage)
+            .positive(positiveMessage),
+
+        profitSYP: z
             .number(requiredMessage)
             .positive(positiveMessage),
 
