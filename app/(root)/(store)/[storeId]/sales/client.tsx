@@ -115,19 +115,20 @@ function SalesPage({ storeId }: Props) {
             },
         },
         {
-            accessorKey: "pricePerGram",
+            accessorKey: "pricePerGramUSD",
             header: lang === "en" ? "Price/gram" : "السعر/جرام",
             cell: ({ row }) => {
-                return formatCurrency(row.getValue("pricePerGram"), row.original.currency, lang);
+                const val = row.getValue("pricePerGramUSD") as number;
+                return formatCurrency(val, row.original.currency, lang);
             },
         },
         {
-            accessorKey: "total",
+            accessorKey: "totalUSD",
             header: lang === "en" ? "Total" : "الإجمالي",
             cell: ({ row }) => {
                 return (
                     <span className="font-medium">
-                        {formatCurrency(row.getValue("total"), row.original.currency, lang)}
+                        {formatCurrency(row.getValue("totalUSD"), row.original.currency, lang)}
                     </span>
                 );
             },

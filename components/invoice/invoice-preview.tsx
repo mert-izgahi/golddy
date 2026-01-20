@@ -6,22 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useLangStore } from "@/store/lang-store";
-import { Sale } from "@/lib/generated/prisma";
+import { Sale, Store } from "@/lib/generated/prisma";
 import { formatCurrency, formatDate, getPaymentTypeLabel, getGoldTypeLabel } from "@/lib/utils";
 import { generateInvoicePDF, printInvoicePDF, InvoiceData } from "@/lib/pdf-generator";
-import { useSettings } from "@/hooks/use-settings";
 import { Loader2, Download, Printer, Eye, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface InvoicePreviewProps {
   sale: Sale & {
-    store: {
-      name: string;
-      address?: string;
-      city?: string;
-      primaryPhoneNumber?: string;
-    };
+    store: Store;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -29,7 +23,6 @@ interface InvoicePreviewProps {
 
 export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
   const { lang } = useLangStore();
-  const { settings } = useSettings();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownloadPDF = async () => {
@@ -37,11 +30,10 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
       setIsGenerating(true);
       const invoiceData: InvoiceData = {
         sale,
-        settings: settings || undefined
       };
-      
+
       const { dataUrl, filename } = await generateInvoicePDF(invoiceData);
-      
+
       // Create download link
       const link = document.createElement('a');
       link.href = dataUrl;
@@ -49,7 +41,7 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(
         lang === "en" ? "Invoice downloaded successfully" : "تم تنزيل الفاتورة بنجاح"
       );
@@ -68,11 +60,10 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
       setIsGenerating(true);
       const invoiceData: InvoiceData = {
         sale,
-        settings: settings || undefined
       };
-      
+
       await printInvoicePDF(invoiceData);
-      
+
       toast.success(
         lang === "en" ? "Print dialog opened" : "تم فتح نافذة الطباعة"
       );
@@ -101,7 +92,7 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Invoice Header */}
           <div className="text-center border-b pb-4">
@@ -218,11 +209,11 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
                   {formatCurrency(sale.amountPaid, sale.currency, lang)}
                 </span>
               </div>
-              
+
               {Math.abs(difference) > 0.01 && (
                 <div className="flex justify-between">
                   <span>
-                    {difference > 0 
+                    {difference > 0
                       ? (lang === "en" ? "Change Due:" : "الباقي للعميل:")
                       : (lang === "en" ? "Remaining Balance:" : "المتبقي:")
                     }
@@ -232,7 +223,7 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
                   </span>
                 </div>
               )}
-              
+
               {Math.abs(difference) <= 0.01 && (
                 <div className="flex justify-between">
                   <span>{lang === "en" ? "Payment Status:" : "حالة الدفع:"}</span>
@@ -245,7 +236,7 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
           </div>
 
           {/* Currency Exchange */}
-          {sale.currency === 'USD' && settings?.exchangeRateUSDtoSYP && (
+          {sale.currency === 'USD' && sale.store?.exchangeRateUSDtoSYP && (
             <div>
               <h3 className="font-semibold text-sm mb-3">
                 {lang === "en" ? "Currency Exchange" : "سعر الصرف"}
@@ -254,13 +245,13 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
                 <div className="flex justify-between">
                   <span>{lang === "en" ? "Equivalent in SYP:" : "المعادل بالليرة:"}</span>
                   <span className="font-medium">
-                    {formatCurrency(sale.totalUSD * settings.exchangeRateUSDtoSYP, 'SYP', lang)}
+                    {formatCurrency(sale.totalUSD * sale.store.exchangeRateUSDtoSYP, 'SYP', lang)}
                   </span>
                 </div>
                 <div className="text-xs text-gray-600">
-                  {lang === "en" 
-                    ? `Exchange Rate: 1 USD = ${settings.exchangeRateUSDtoSYP.toFixed(2)} SYP`
-                    : `سعر الصرف: ١ دولار = ${settings.exchangeRateUSDtoSYP.toFixed(2)} ليرة`
+                  {lang === "en"
+                    ? `Exchange Rate: 1 USD = ${sale.store.exchangeRateUSDtoSYP.toFixed(2)} SYP`
+                    : `سعر الصرف: ١ دولار = ${sale.store.exchangeRateUSDtoSYP.toFixed(2)} ليرة`
                   }
                 </div>
               </div>
@@ -293,7 +284,7 @@ export function InvoicePreview({ sale, isOpen, onClose }: InvoicePreviewProps) {
               )}
               {lang === "en" ? "Download PDF" : "تحميل PDF"}
             </Button>
-            
+
             <Button
               onClick={handlePrintPDF}
               disabled={isGenerating}
