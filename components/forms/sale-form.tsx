@@ -587,7 +587,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            {lang === "en" ? "Profit (USD)" : "الربح (دولار)"}
+                                            {lang === "en" ? "Profit (USD)" : "أجور (دولار)"}
                                             <span className="text-gray-400 ml-1">*</span>
                                         </FormLabel>
                                         <FormControl>
@@ -612,7 +612,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                         <FormDescription>
                                             {lang === "en"
                                                 ? "Additional profit amount in USD"
-                                                : "مبلغ الربح الإضافي بالدولار"}
+                                                : "مبلغ أجور بالدولار"}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -626,7 +626,7 @@ export function SaleForm({ storeId, mode, saleId }: SaleFormProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            {lang === "en" ? "Profit (SYP)" : "الربح (ليرة)"}
+                                            {lang === "en" ? "Profit (SYP)" : "أجور (ليرة)"}
                                         </FormLabel>
                                         <FormControl>
                                             <Input

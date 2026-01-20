@@ -88,7 +88,7 @@ function Sidebar() {
             label: lang === "en" ? "Store Settings" : "إعدادات المتجر",
             href: `/${store?.id}/store-settings`,
             icon: <StoreIcon size={12} />,
-            isActive: pathname === `/${store?.id}/store-settings`,
+            isActive: pathname === `/${store?.id}/settings`,
         },
         // {
         //     label: lang === "en" ? "Account" : "الحساب",

@@ -1,8 +1,15 @@
-import React from 'react'
+// app/(root)/(store)/[storeId]/sales/new/page.tsx
+import StoreSettingsPage from './client';
+import NewSalePage from './client'
 
-function page() {
+interface Props {
+  params: Promise<{ storeId: string }>
+}
+
+async function page({ params }: Props) {
+  const { storeId } = await params;
   return (
-    <div>page</div>
+    <StoreSettingsPage storeId={storeId} />
   )
 }
 
