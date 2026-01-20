@@ -318,12 +318,8 @@ export const getUserSchema = (lang: "en" | "ar") => {
     });
 };
 
-// lib/zod.ts (add to existing file)
-
 
 export const getStoreSchema = (lang: "en" | "ar") => {
-    const requiredMessage =
-        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
 
     return z.object({
         name: z
@@ -332,20 +328,13 @@ export const getStoreSchema = (lang: "en" | "ar") => {
             .max(100, lang === "en" ? "Store name is too long" : "اسم المتجر طويل جدًا"),
 
         address: z
-            .string()
-            .optional()
-            .or(z.literal("")),
+            .string(),
 
         city: z
-            .string()
-            .optional()
-            .or(z.literal("")),
+            .string(),
 
         logoUrl: z
-            .string()
-            .url(lang === "en" ? "Invalid URL" : "رابط غير صالح")
-            .optional()
-            .or(z.literal("")),
+            .url(lang === "en" ? "Invalid URL" : "رابط غير صالح"),
 
         primaryPhoneNumber: z
             .string()
@@ -354,9 +343,7 @@ export const getStoreSchema = (lang: "en" | "ar") => {
                     lang === "en"
                         ? "Invalid phone number"
                         : "رقم الهاتف غير صالح",
-            })
-            .optional()
-            .or(z.literal("")),
+            }),
 
         secondaryPhoneNumber: z
             .string()
@@ -365,12 +352,10 @@ export const getStoreSchema = (lang: "en" | "ar") => {
                     lang === "en"
                         ? "Invalid phone number"
                         : "رقم الهاتف غير صالح",
-            })
-            .optional()
-            .or(z.literal("")),
+            }),
 
         status: z
-            .enum(StoreStatus, lang === "en" ? "Status is required" : "الحالة مطلوبة"),
+            .enum(Object.values(StoreStatus)),
 
         // Initial inventory values
         currentGold14: z
@@ -398,26 +383,27 @@ export const getStoreSchema = (lang: "en" | "ar") => {
             .number()
             .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
 
-        // Profit margins
-        profitMarginGold14: z
+        // Gold prices in USD
+        priceGold14USD: z
             .number()
-            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
-            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
 
-        profitMarginGold18: z
+        priceGold18USD: z
             .number()
-            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
-            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
 
-        profitMarginGold21: z
+        priceGold21USD: z
             .number()
-            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
-            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
 
-        profitMarginGold24: z
+        priceGold24USD: z
             .number()
-            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة")
-            .max(100, lang === "en" ? "Value cannot exceed 100%" : "القيمة لا يمكن أن تتجاوز 100%"),
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
+
+        // Exchange rate
+        exchangeRateUSDtoSYP: z
+            .number()
+            .min(0, lang === "en" ? "Value cannot be negative" : "القيمة لا يمكن أن تكون سالبة"),
     });
 };
 

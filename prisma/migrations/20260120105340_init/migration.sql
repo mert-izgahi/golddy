@@ -8,7 +8,7 @@ CREATE TYPE "StoreStatus" AS ENUM ('BAND', 'ACTIVE', 'SUSPEND');
 CREATE TYPE "CurrencyType" AS ENUM ('USD', 'SYP');
 
 -- CreateEnum
-CREATE TYPE "PaymentType" AS ENUM ('CASH', 'TRANSFER', 'OTHER');
+CREATE TYPE "PaymentType" AS ENUM ('CASH', 'SHAM_CASH', 'OTHER');
 
 -- CreateEnum
 CREATE TYPE "StockType" AS ENUM ('ADD', 'REMOVE');
@@ -55,16 +55,7 @@ CREATE TABLE "Store" (
     "priceGold18USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "priceGold21USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "priceGold24USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "priceGold14SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "priceGold18SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "priceGold21SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "priceGold24SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "exchangeRateUSDtoSYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "lastPriceUpdate" TIMESTAMP(3),
-    "profitMarginGold14" DOUBLE PRECISION NOT NULL DEFAULT 5,
-    "profitMarginGold18" DOUBLE PRECISION NOT NULL DEFAULT 5,
-    "profitMarginGold21" DOUBLE PRECISION NOT NULL DEFAULT 5,
-    "profitMarginGold24" DOUBLE PRECISION NOT NULL DEFAULT 5,
     "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "Store_pkey" PRIMARY KEY ("id")
@@ -76,7 +67,6 @@ CREATE TABLE "Sale" (
     "invoiceNumber" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "weight" DOUBLE PRECISION NOT NULL,
     "goldType" "GoldType" NOT NULL,
     "pricePerGramUSD" DOUBLE PRECISION NOT NULL,
@@ -89,10 +79,6 @@ CREATE TABLE "Sale" (
     "customerName" TEXT,
     "customerPhone" TEXT,
     "description" TEXT,
-    "costPriceUSD" DOUBLE PRECISION NOT NULL,
-    "profitUSD" DOUBLE PRECISION NOT NULL,
-    "profitSYP" DOUBLE PRECISION NOT NULL,
-    "profitMargin" DOUBLE PRECISION NOT NULL,
     "reportId" TEXT,
     "storeId" TEXT NOT NULL,
 
@@ -102,7 +88,8 @@ CREATE TABLE "Sale" (
 -- CreateTable
 CREATE TABLE "Stock" (
     "id" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "goldType" "GoldType" NOT NULL,
     "quantity" DOUBLE PRECISION NOT NULL,
     "type" "StockType" NOT NULL,
@@ -122,7 +109,8 @@ CREATE TABLE "Stock" (
 -- CreateTable
 CREATE TABLE "Exchange" (
     "id" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "fromCurrency" "CurrencyType",
     "toCurrency" "CurrencyType",
     "exchangeRate" DOUBLE PRECISION,
@@ -152,11 +140,15 @@ CREATE TABLE "Report" (
     "closingGold21" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "openingGold24" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "closingGold24" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "goldPrice14" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "goldPrice18" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "goldPrice21" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "goldPrice24" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "dollarRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold14USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold18USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold21USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold24USD" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold14SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold18SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold21SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "priceGold24SYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "exchangeRateUSDtoSYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "totalGoldSold" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "totalSalesUSD" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "totalSalesSYP" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -180,7 +172,7 @@ CREATE UNIQUE INDEX "Store_name_key" ON "Store"("name");
 CREATE UNIQUE INDEX "Sale_invoiceNumber_key" ON "Sale"("invoiceNumber");
 
 -- CreateIndex
-CREATE INDEX "Sale_storeId_date_idx" ON "Sale"("storeId", "date");
+CREATE INDEX "Sale_storeId_createdAt_idx" ON "Sale"("storeId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Sale_invoiceNumber_idx" ON "Sale"("invoiceNumber");
@@ -189,7 +181,7 @@ CREATE INDEX "Sale_invoiceNumber_idx" ON "Sale"("invoiceNumber");
 CREATE INDEX "Sale_reportId_idx" ON "Sale"("reportId");
 
 -- CreateIndex
-CREATE INDEX "Stock_storeId_date_idx" ON "Stock"("storeId", "date");
+CREATE INDEX "Stock_storeId_createdAt_idx" ON "Stock"("storeId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Stock_goldType_idx" ON "Stock"("goldType");
@@ -198,7 +190,7 @@ CREATE INDEX "Stock_goldType_idx" ON "Stock"("goldType");
 CREATE INDEX "Stock_reportId_idx" ON "Stock"("reportId");
 
 -- CreateIndex
-CREATE INDEX "Exchange_storeId_date_idx" ON "Exchange"("storeId", "date");
+CREATE INDEX "Exchange_storeId_createdAt_idx" ON "Exchange"("storeId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Exchange_reportId_idx" ON "Exchange"("reportId");

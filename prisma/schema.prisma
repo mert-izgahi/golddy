@@ -54,11 +54,14 @@ model Store {
   currentUSD Float @default(0)
   currentSYP Float @default(0)
 
-  // Profit Margins (percentage)
-  profitMarginGold14 Float @default(0)
-  profitMarginGold18 Float @default(0)
-  profitMarginGold21 Float @default(0)
-  profitMarginGold24 Float @default(0)
+  // Store Prices Settings
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
+
+  // Current Exchange Rate
+  exchangeRateUSDtoSYP Float @default(0)
 
   // Relations
   owner     User       @relation(fields: [ownerId], references: [id])
@@ -99,12 +102,6 @@ model Sale {
   customerName  String?
   customerPhone String?
   description   String?
-
-  // Profit Calculation
-  costPriceUSD Float // Actual cost of gold
-  profitUSD    Float
-  profitSYP    Float
-  profitMargin Float // Percentage
 
   // Relations
   report   Report? @relation(fields: [reportId], references: [id])
@@ -159,7 +156,7 @@ model Stock {
 // --------------------------------------------------------
 // Currency exchange operations between USD and SYP
 model Exchange {
-  id              String        @id @default(cuid())
+  id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -188,21 +185,21 @@ model Exchange {
 // --------------------------------------------------------
 // Tracks daily balances and connects all daily records
 model Report {
-  id            String    @id @default(cuid())
-  date          DateTime  @default(now())
-  openingUSD    Float     @default(0)
-  closingUSD    Float     @default(0)
-  openingSYP    Float     @default(0)
-  closingSYP    Float     @default(0)
-  openingGold14 Float     @default(0)
-  closingGold14 Float     @default(0)
-  openingGold18 Float     @default(0)
-  closingGold18 Float     @default(0)
-  openingGold21 Float     @default(0)
-  closingGold21 Float     @default(0)
-  openingGold24 Float     @default(0)
-  closingGold24 Float     @default(0)
-  
+  id            String   @id @default(cuid())
+  date          DateTime @default(now())
+  openingUSD    Float    @default(0)
+  closingUSD    Float    @default(0)
+  openingSYP    Float    @default(0)
+  closingSYP    Float    @default(0)
+  openingGold14 Float    @default(0)
+  closingGold14 Float    @default(0)
+  openingGold18 Float    @default(0)
+  closingGold18 Float    @default(0)
+  openingGold21 Float    @default(0)
+  closingGold21 Float    @default(0)
+  openingGold24 Float    @default(0)
+  closingGold24 Float    @default(0)
+
   // Prices from Admin Settings
   priceGold14USD Float @default(0)
   priceGold18USD Float @default(0)
@@ -216,7 +213,6 @@ model Report {
 
   // Exchange Rate Of Report for Selected Date
   exchangeRateUSDtoSYP Float @default(0)
-
 
   totalGoldSold Float     @default(0)
   totalSalesUSD Float     @default(0)
@@ -233,32 +229,6 @@ model Report {
   sales     Sale[]
   stocks    Stock[]
   exchanges Exchange[]
-}
-
-
-// --------------------------------------------------------
-//  MODEL: Settings (Only For Admins)
-// --------------------------------------------------------
-// Admin Will Set Prices of Gold Types and Exchange day by day
-model Settings {
-  id   String   @id @default(cuid())
-  date DateTime @default(now())
-
-  priceGold14USD Float @default(0)
-  priceGold18USD Float @default(0)
-  priceGold21USD Float @default(0)
-  priceGold24USD Float @default(0)
-
-  priceGold14SYP Float @default(0)
-  priceGold18SYP Float @default(0)
-  priceGold21SYP Float @default(0)
-  priceGold24SYP Float @default(0)
-
-  // Current Exchange Rate
-  exchangeRateUSDtoSYP Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 // --------------------------------------------------------
@@ -283,7 +253,7 @@ enum CurrencyType {
 
 enum PaymentType {
   CASH
-  TRANSFER
+  SHAM_CASH
   OTHER
 }
 

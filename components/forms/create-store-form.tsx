@@ -1,4 +1,3 @@
-// components/forms/create-store-form.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -32,7 +31,6 @@ import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoreStatus } from "@/lib/generated/prisma/client";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface CreateStoreFormProps {
     mode?: "create" | "edit";
@@ -70,10 +68,11 @@ export default function CreateStoreForm({
             currentGold24: 0,
             currentUSD: 0,
             currentSYP: 0,
-            profitMarginGold14: 0,
-            profitMarginGold18: 0,
-            profitMarginGold21: 0,
-            profitMarginGold24: 0,
+            priceGold14USD: 0,
+            priceGold18USD: 0,
+            priceGold21USD: 0,
+            priceGold24USD: 0,
+            exchangeRateUSDtoSYP: 0,
         },
     });
 
@@ -94,10 +93,11 @@ export default function CreateStoreForm({
                 currentGold24: store.currentGold24,
                 currentUSD: store.currentUSD,
                 currentSYP: store.currentSYP,
-                profitMarginGold14: store.profitMarginGold14,
-                profitMarginGold18: store.profitMarginGold18,
-                profitMarginGold21: store.profitMarginGold21,
-                profitMarginGold24: store.profitMarginGold24,
+                priceGold14USD: store.priceGold14USD,
+                priceGold18USD: store.priceGold18USD,
+                priceGold21USD: store.priceGold21USD,
+                priceGold24USD: store.priceGold24USD,
+                exchangeRateUSDtoSYP: store.exchangeRateUSDtoSYP,
             });
         }
     }, [store, form, mode]);
@@ -122,7 +122,7 @@ export default function CreateStoreForm({
                     lang === "en" ? "Store updated successfully" : "تم تحديث المتجر بنجاح"
                 );
             }
-            router.push("/admin/stores");
+            router.refresh();
         } catch (error: any) {
             toast.error(
                 error?.message ||
@@ -538,38 +538,38 @@ export default function CreateStoreForm({
 
                         <Separator />
 
-                        {/* Profit Margins Section */}
+                        {/* Gold Prices Section */}
                         <div>
                             <div className="mb-4">
                                 <h3 className="text-lg font-medium">
-                                    {lang === "en" ? "Profit Margins (%)" : "هوامش الربح (%)"}
+                                    {lang === "en" ? "Gold Prices (USD per gram)" : "أسعار الذهب (دولار لكل جرام)"}
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
                                     {lang === "en"
-                                        ? "Set the profit margin percentage for each gold type"
-                                        : "حدد نسبة هامش الربح لكل نوع من الذهب"}
+                                        ? "Set the current gold prices in USD per gram"
+                                        : "حدد أسعار الذهب الحالية بالدولار لكل جرام"}
                                 </p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <FormField
                                     control={form.control}
-                                    name="profitMarginGold14"
+                                    name="priceGold14USD"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                14K {lang === "en" ? "Margin" : "الهامش"}
+                                                14K {lang === "en" ? "Price" : "السعر"}
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
-                                                    step="0.1"
+                                                    step="0.01"
                                                     placeholder="0"
                                                     {...field}
                                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                                 />
                                             </FormControl>
-                                            <FormDescription>%</FormDescription>
+                                            <FormDescription>USD/gram</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -577,22 +577,22 @@ export default function CreateStoreForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="profitMarginGold18"
+                                    name="priceGold18USD"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                18K {lang === "en" ? "Margin" : "الهامش"}
+                                                18K {lang === "en" ? "Price" : "السعر"}
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
-                                                    step="0.1"
+                                                    step="0.01"
                                                     placeholder="0"
                                                     {...field}
                                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                                 />
                                             </FormControl>
-                                            <FormDescription>%</FormDescription>
+                                            <FormDescription>USD/gram</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -600,22 +600,22 @@ export default function CreateStoreForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="profitMarginGold21"
+                                    name="priceGold21USD"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                21K {lang === "en" ? "Margin" : "الهامش"}
+                                                21K {lang === "en" ? "Price" : "السعر"}
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
-                                                    step="0.1"
+                                                    step="0.01"
                                                     placeholder="0"
                                                     {...field}
                                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                                 />
                                             </FormControl>
-                                            <FormDescription>%</FormDescription>
+                                            <FormDescription>USD/gram</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -623,22 +623,67 @@ export default function CreateStoreForm({
 
                                 <FormField
                                     control={form.control}
-                                    name="profitMarginGold24"
+                                    name="priceGold24USD"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                24K {lang === "en" ? "Margin" : "الهامش"}
+                                                24K {lang === "en" ? "Price" : "السعر"}
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
-                                                    step="0.1"
+                                                    step="0.01"
                                                     placeholder="0"
                                                     {...field}
                                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                                 />
                                             </FormControl>
-                                            <FormDescription>%</FormDescription>
+                                            <FormDescription>USD/gram</FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        {/* Exchange Rate Section */}
+                        <div>
+                            <div className="mb-4">
+                                <h3 className="text-lg font-medium">
+                                    {lang === "en" ? "Exchange Rate" : "سعر الصرف"}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {lang === "en"
+                                        ? "Set the current exchange rate from USD to SYP"
+                                        : "حدد سعر الصرف الحالي من الدولار إلى الليرة السورية"}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="exchangeRateUSDtoSYP"
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>
+                                                {lang === "en" ? "USD to SYP Exchange Rate" : "سعر صرف الدولار إلى الليرة"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0"
+                                                    {...field}
+                                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                {lang === "en"
+                                                    ? "How much SYP equals 1 USD"
+                                                    : "كم ليرة سورية تساوي 1 دولار"}
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
