@@ -43,3 +43,33 @@ export interface QueryParams {
     limit?: number;
     search?: string;
 }
+
+export interface InvoiceData {
+  sale: {
+    id: string;
+    invoiceNumber: string;
+    createdAt: string;
+    weight: number;
+    goldType: string;
+    pricePerGramUSD: number;
+    pricePerGramSYP: number;
+    totalUSD: number;
+    totalSYP: number;
+    profitUSD: number;
+    profitSYP: number;
+    currency: string;
+    paymentType: string;
+    amountPaid: number;
+    customerName: string;
+    customerPhone: string;
+    description: string;
+    store: {
+      name: string;
+      address: string;
+      city: string;
+      primaryPhoneNumber: string;
+      exchangeRateUSDtoSYP: number;
+    };
+  };
+  lang?: 'en' | 'ar';
+}

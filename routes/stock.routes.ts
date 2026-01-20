@@ -9,15 +9,79 @@ import {
     getUpdateStockSchema,
     type CreateStockInput,
     type UpdateStockInput
-} from "@/lib/zod"; // We'll add these to your zod.ts
+} from "@/zod/stock.schemas";
+import { GoldType } from "@/lib/generated/prisma";
 
 const stockRoutes = new Hono();
+
+// Helper function to get the current gold balance for a specific gold type
+async function getCurrentGoldBalance(storeId: string, goldType: GoldType): Promise<number> {
+    const store = await prisma.store.findUnique({
+        where: { id: storeId },
+        select: {
+            currentGold14: true,
+            currentGold18: true,
+            currentGold21: true,
+            currentGold24: true,
+        }
+    });
+
+    if (!store) return 0;
+
+    const balanceMap = {
+        GOLD_14: store.currentGold14,
+        GOLD_18: store.currentGold18,
+        GOLD_21: store.currentGold21,
+        GOLD_24: store.currentGold24,
+    };
+
+    return balanceMap[goldType] || 0;
+}
+
+// Helper function to update store gold balance
+async function updateStoreGoldBalance(
+    storeId: string,
+    goldType: GoldType,
+    quantity: number,
+    type: "ADD" | "REMOVE"
+) {
+    const currentBalance = await getCurrentGoldBalance(storeId, goldType);
+    const adjustment = type === "ADD" ? quantity : -quantity;
+    const newBalance = currentBalance + adjustment;
+
+    if (newBalance < 0) {
+        throw new Error("Insufficient stock for removal operation");
+    }
+
+    const updateData: any = {};
+
+    switch (goldType) {
+        case "GOLD_14":
+            updateData.currentGold14 = newBalance;
+            break;
+        case "GOLD_18":
+            updateData.currentGold18 = newBalance;
+            break;
+        case "GOLD_21":
+            updateData.currentGold21 = newBalance;
+            break;
+        case "GOLD_24":
+            updateData.currentGold24 = newBalance;
+            break;
+    }
+
+    await prisma.store.update({
+        where: { id: storeId },
+        data: updateData
+    });
+
+    return newBalance;
+}
 
 stockRoutes
     // @desc    Get all stock movements for a store with pagination
     // @route   GET /stock/store/:storeId
     // @access  Private
-    // @method  Get
     .get("/store/:storeId", authenticate, async (c) => {
         const { storeId } = c.req.param();
         const user = c.get("user") as ContextUser;
@@ -49,7 +113,7 @@ stockRoutes
 
         const stockMovements = await prisma.stock.findMany({
             where: { storeId },
-            orderBy: { date: 'desc' },
+            orderBy: { createdAt: 'desc' },
             skip,
             take: limit,
             include: {
@@ -83,7 +147,6 @@ stockRoutes
     // @desc    Get stock movement by ID
     // @route   GET /stock/:id
     // @access  Private
-    // @method  Get
     .get("/:id", authenticate, async (c) => {
         const user = c.get("user") as ContextUser;
         const { id } = c.req.param();
@@ -92,7 +155,7 @@ stockRoutes
             where: { id },
             include: {
                 store: {
-                    select: { name: true }
+                    select: { name: true, id: true }
                 },
                 report: {
                     select: {
@@ -138,62 +201,101 @@ stockRoutes
     // @desc    Create a new stock movement
     // @route   POST /stock/store/:storeId
     // @access  Private
-    // @method  Post
     .post("/store/:storeId",
-        zValidator('json', getCreateStockSchema('en')),
         authenticate,
+        zValidator('json', getCreateStockSchema('en')),
         async (c) => {
-            console.log("👉👉 CREATE STOCK MOVEMENT");
+            console.log("👉 CREATE STOCK MOVEMENT");
 
             const user = c.get("user") as ContextUser;
             const { storeId } = c.req.param();
             const body = c.req.valid('json') as CreateStockInput;
             const {
-                date,
                 quantity,
                 goldType,
                 type,
+                costPerGramUSD,
+                totalCostUSD,
+                totalCostSYP,
+                supplier,
+                invoiceRef,
                 note
             } = body;
 
-            // Verify store exists and user has access
-            const store = await prisma.store.findFirst({
-                where: {
-                    id: storeId,
-                    ownerId: user!.id
-                }
-            });
+            try {
+                // Verify store exists and user has access
+                const store = await prisma.store.findFirst({
+                    where: {
+                        id: storeId,
+                        ownerId: user!.id
+                    }
+                });
 
-            if (!store) {
+                if (!store) {
+                    return c.json({
+                        message: "Store not found or access denied",
+                        result: null,
+                        success: false
+                    }, 403);
+                }
+
+                // Check if removing more than available
+                if (type === "REMOVE") {
+                    const currentBalance = await getCurrentGoldBalance(storeId, goldType);
+                    if (currentBalance < quantity) {
+                        return c.json({
+                            message: `Insufficient stock. Current balance: ${currentBalance}g, Requested removal: ${quantity}g`,
+                            result: null,
+                            success: false
+                        }, 400);
+                    }
+                }
+
+                // Update store gold balance and get new balance
+                const balanceAfter = await updateStoreGoldBalance(storeId, goldType, quantity, type);
+
+                // Create stock movement record
+                const newStock = await prisma.stock.create({
+                    data: {
+                        storeId,
+                        quantity,
+                        goldType,
+                        type,
+                        balanceAfter,
+                        costPerGramUSD: costPerGramUSD || null,
+                        totalCostUSD: totalCostUSD || null,
+                        totalCostSYP: totalCostSYP || null,
+                        supplier: supplier || null,
+                        invoiceRef: invoiceRef || null,
+                        note: note || null,
+                    },
+                    include: {
+                        store: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                });
+
                 return c.json({
-                    message: "Store not found or access denied",
+                    message: "Stock movement created successfully",
+                    result: newStock,
+                    success: true
+                }, 201);
+            } catch (error: any) {
+                console.error("Error creating stock movement:", error);
+                return c.json({
+                    message: error.message || "Failed to create stock movement",
                     result: null,
                     success: false
-                }, 403);
+                }, 500);
             }
-
-            const newStock = await prisma.stock.create({
-                data: {
-                    storeId,
-                    date: date || new Date(),
-                    quantity,
-                    goldType,
-                    type,
-                    note: note || null
-                }
-            });
-
-            return c.json({
-                message: "Stock movement created successfully",
-                result: newStock,
-                success: true
-            }, 201);
         })
 
     // @desc    Update a stock movement
     // @route   PUT /stock/:id
     // @access  Private
-    // @method  Put
     .put("/:id",
         authenticate,
         zValidator('json', getUpdateStockSchema('en')),
@@ -202,6 +304,101 @@ stockRoutes
             const { id } = c.req.param();
             const body = c.req.valid('json') as UpdateStockInput;
 
+            try {
+                // Check if stock movement exists and user has access
+                const existingStock = await prisma.stock.findFirst({
+                    where: {
+                        id,
+                        store: { ownerId: user!.id }
+                    },
+                    include: {
+                        store: true
+                    }
+                });
+
+                if (!existingStock) {
+                    return c.json({
+                        message: "Stock movement not found or access denied",
+                        result: null,
+                        success: false
+                    }, 403);
+                }
+
+                // If quantity, goldType, or type is being updated, we need to recalculate balances
+                const isBalanceAffected =
+                    body.quantity !== undefined ||
+                    body.goldType !== undefined ||
+                    body.type !== undefined;
+
+                if (isBalanceAffected) {
+                    // Revert the old movement
+                    const revertType = existingStock.type === "ADD" ? "REMOVE" : "ADD";
+                    await updateStoreGoldBalance(
+                        existingStock.storeId,
+                        existingStock.goldType,
+                        existingStock.quantity,
+                        revertType
+                    );
+
+                    // Apply the new movement
+                    const newQuantity = body.quantity ?? existingStock.quantity;
+                    const newGoldType = body.goldType ?? existingStock.goldType;
+                    const newType = body.type ?? existingStock.type;
+
+                    const balanceAfter = await updateStoreGoldBalance(
+                        existingStock.storeId,
+                        newGoldType,
+                        newQuantity,
+                        newType
+                    );
+
+                    body.balanceAfter = balanceAfter!;
+                }
+
+                const updatedStock = await prisma.stock.update({
+                    where: { id },
+                    data: {
+                        ...body,
+                        costPerGramUSD: body.costPerGramUSD !== undefined ? body.costPerGramUSD : undefined,
+                        totalCostUSD: body.totalCostUSD !== undefined ? body.totalCostUSD : undefined,
+                        totalCostSYP: body.totalCostSYP !== undefined ? body.totalCostSYP : undefined,
+                        supplier: body.supplier !== undefined ? body.supplier : undefined,
+                        invoiceRef: body.invoiceRef !== undefined ? body.invoiceRef : undefined,
+                        note: body.note !== undefined ? body.note : undefined,
+                        balanceAfter: body.balanceAfter! !== undefined ? body.balanceAfter! : 0
+                    },
+                    include: {
+                        store: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                });
+
+                return c.json({
+                    message: "Stock movement updated successfully",
+                    result: updatedStock,
+                    success: true
+                });
+            } catch (error: any) {
+                console.error("Error updating stock movement:", error);
+                return c.json({
+                    message: error.message || "Failed to update stock movement",
+                    result: null,
+                    success: false
+                }, 500);
+            }
+        })
+
+    // @desc    Delete a stock movement
+    // @route   DELETE /stock/:id
+    // @access  Private
+    .delete("/:id", authenticate, async (c) => {
+        const user = c.get("user") as ContextUser;
+        const { id } = c.req.param();
+
+        try {
             // Check if stock movement exists and user has access
             const existingStock = await prisma.stock.findFirst({
                 where: {
@@ -218,189 +415,172 @@ stockRoutes
                 }, 403);
             }
 
-            const updateData: any = {};
-            if (body.date !== undefined) updateData.date = body.date;
-            if (body.quantity !== undefined) updateData.quantity = body.quantity;
-            if (body.goldType !== undefined) updateData.goldType = body.goldType;
-            if (body.type !== undefined) updateData.type = body.type;
-            if (body.note !== undefined) updateData.note = body.note || null;
+            // Revert the stock movement from store balance
+            const revertType = existingStock.type === "ADD" ? "REMOVE" : "ADD";
+            await updateStoreGoldBalance(
+                existingStock.storeId,
+                existingStock.goldType,
+                existingStock.quantity,
+                revertType
+            );
 
-            const updatedStock = await prisma.stock.update({
-                where: { id },
-                data: updateData
+            // Delete the stock movement
+            await prisma.stock.delete({
+                where: { id }
             });
 
             return c.json({
-                message: "Stock movement updated successfully",
-                result: updatedStock,
+                message: "Stock movement deleted successfully",
+                result: null,
                 success: true
             });
-        })
-
-    // @desc    Delete a stock movement
-    // @route   DELETE /stock/:id
-    // @access  Private
-    // @method  Delete
-    .delete("/:id", authenticate, async (c) => {
-        const user = c.get("user") as ContextUser;
-        const { id } = c.req.param();
-
-        // Check if stock movement exists and user has access
-        const existingStock = await prisma.stock.findFirst({
-            where: {
-                id,
-                store: { ownerId: user!.id }
-            }
-        });
-
-        if (!existingStock) {
+        } catch (error: any) {
+            console.error("Error deleting stock movement:", error);
             return c.json({
-                message: "Stock movement not found or access denied",
+                message: error.message || "Failed to delete stock movement",
                 result: null,
                 success: false
-            }, 403);
+            }, 500);
         }
-
-        await prisma.stock.delete({
-            where: { id }
-        });
-
-        return c.json({
-            message: "Stock movement deleted successfully",
-            result: null,
-            success: true
-        });
     })
 
     // @desc    Get stock statistics for a store
     // @route   GET /stock/stats/store/:storeId
     // @access  Private
-    // @method  Get
     .get("/stats/store/:storeId", authenticate, async (c) => {
         const user = c.get("user") as ContextUser;
         const { storeId } = c.req.param();
 
-        // Verify store exists and user has access
-        const store = await prisma.store.findFirst({
-            where: {
-                id: storeId,
-                ownerId: user!.id
-            }
-        });
+        try {
+            // Verify store exists and user has access
+            const store = await prisma.store.findFirst({
+                where: {
+                    id: storeId,
+                    ownerId: user!.id
+                },
+                select: {
+                    currentGold14: true,
+                    currentGold18: true,
+                    currentGold21: true,
+                    currentGold24: true,
+                }
+            });
 
-        if (!store) {
+            if (!store) {
+                return c.json({
+                    message: "Store not found or access denied",
+                    result: null,
+                    success: false
+                }, 403);
+            }
+
+            // Get current stock from store (source of truth)
+            const currentStock = {
+                GOLD_14: store.currentGold14,
+                GOLD_18: store.currentGold18,
+                GOLD_21: store.currentGold21,
+                GOLD_24: store.currentGold24,
+            };
+
+            // Get totals
+            const totalAdditions = await prisma.stock.aggregate({
+                where: { storeId, type: 'ADD' },
+                _sum: { quantity: true }
+            });
+
+            const totalRemovals = await prisma.stock.aggregate({
+                where: { storeId, type: 'REMOVE' },
+                _sum: { quantity: true }
+            });
+
+            const totalMovements = await prisma.stock.count({
+                where: { storeId }
+            });
+
+            const stats = {
+                currentStock,
+                totalAdditions: totalAdditions._sum.quantity || 0,
+                totalRemovals: totalRemovals._sum.quantity || 0,
+                totalMovements,
+                netChange: (totalAdditions._sum.quantity || 0) - (totalRemovals._sum.quantity || 0)
+            };
+
             return c.json({
-                message: "Store not found or access denied",
+                message: "Stock statistics fetched successfully",
+                result: stats,
+                success: true
+            });
+        } catch (error: any) {
+            console.error("Error fetching stock statistics:", error);
+            return c.json({
+                message: error.message || "Failed to fetch stock statistics",
                 result: null,
                 success: false
-            }, 403);
+            }, 500);
         }
-
-        // Get all stock movements
-        const stockMovements = await prisma.stock.findMany({
-            where: { storeId },
-            orderBy: { date: 'asc' }
-        });
-
-        // Calculate current stock by gold type
-        const currentStock = {
-            GOLD_14: 0,
-            GOLD_18: 0,
-            GOLD_21: 0,
-            GOLD_24: 0
-        };
-
-        stockMovements.forEach(movement => {
-            if (movement.type === 'ADD') {
-                currentStock[movement.goldType] += movement.quantity;
-            } else if (movement.type === 'REMOVE') {
-                currentStock[movement.goldType] -= movement.quantity;
-            }
-        });
-
-        // Get totals
-        const totalAdditions = await prisma.stock.aggregate({
-            where: { storeId, type: 'ADD' },
-            _sum: { quantity: true }
-        });
-
-        const totalRemovals = await prisma.stock.aggregate({
-            where: { storeId, type: 'REMOVE' },
-            _sum: { quantity: true }
-        });
-
-        const totalMovements = await prisma.stock.count({
-            where: { storeId }
-        });
-
-        const stats = {
-            currentStock,
-            totalAdditions: totalAdditions._sum.quantity || 0,
-            totalRemovals: totalRemovals._sum.quantity || 0,
-            totalMovements,
-            netChange: (totalAdditions._sum.quantity || 0) - (totalRemovals._sum.quantity || 0)
-        };
-
-        return c.json({
-            message: "Stock statistics fetched successfully",
-            result: stats,
-            success: true
-        });
     })
 
     // @desc    Get stock movements by date range
     // @route   GET /stock/store/:storeId/date-range
     // @access  Private
-    // @method  Get
     .get("/store/:storeId/date-range", authenticate, async (c) => {
         const user = c.get("user") as ContextUser;
         const { storeId } = c.req.param();
         const fromDate = c.req.query("from");
         const toDate = c.req.query("to");
 
-        // Verify store exists and user has access
-        const store = await prisma.store.findFirst({
-            where: {
-                id: storeId,
-                ownerId: user!.id
+        try {
+            // Verify store exists and user has access
+            const store = await prisma.store.findFirst({
+                where: {
+                    id: storeId,
+                    ownerId: user!.id
+                }
+            });
+
+            if (!store) {
+                return c.json({
+                    message: "Store not found or access denied",
+                    result: null,
+                    success: false
+                }, 403);
             }
-        });
 
-        if (!store) {
-            return c.json({
-                message: "Store not found or access denied",
-                result: null,
-                success: false
-            }, 403);
-        }
+            const whereClause: any = { storeId };
 
-        const whereClause: any = { storeId };
+            if (fromDate || toDate) {
+                whereClause.createdAt = {};
+                if (fromDate) whereClause.createdAt.gte = new Date(fromDate);
+                if (toDate) whereClause.createdAt.lte = new Date(toDate);
+            }
 
-        if (fromDate || toDate) {
-            whereClause.date = {};
-            if (fromDate) whereClause.date.gte = new Date(fromDate);
-            if (toDate) whereClause.date.lte = new Date(toDate);
-        }
-
-        const stockMovements = await prisma.stock.findMany({
-            where: whereClause,
-            orderBy: { date: 'desc' },
-            include: {
-                report: {
-                    select: {
-                        id: true,
-                        date: true,
-                        status: true
+            const stockMovements = await prisma.stock.findMany({
+                where: whereClause,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    report: {
+                        select: {
+                            id: true,
+                            date: true,
+                            status: true
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return c.json({
-            message: "Stock movements fetched successfully",
-            result: stockMovements,
-            success: true
-        });
+            return c.json({
+                message: "Stock movements fetched successfully",
+                result: stockMovements,
+                success: true
+            });
+        } catch (error: any) {
+            console.error("Error fetching stock movements by date range:", error);
+            return c.json({
+                message: error.message || "Failed to fetch stock movements",
+                result: null,
+                success: false
+            }, 500);
+        }
     });
 
 export { stockRoutes };

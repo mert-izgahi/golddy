@@ -1,6 +1,7 @@
 // lib/pdf-generator.ts - ENHANCED VERSION WITH ARABIC FONT SUPPORT
 import jsPDF from 'jspdf';
-import { Sale, Store } from './generated/prisma';
+import autoTable from 'jspdf-autotable';
+import { InvoiceData } from './types';
 
 // Declare jspdf-autotable types and additional jsPDF methods
 declare module 'jspdf' {
@@ -27,12 +28,7 @@ interface ExtendedJsPDF extends jsPDF {
   addFont(filename: string, fontName: string, fontStyle: string): void;
 }
 
-export interface InvoiceData {
-  sale: Sale & {
-    store: Store
-  };
-  lang?: 'en' | 'ar';
-}
+
 
 // Helper function to reverse Arabic text for proper display
 // This is a workaround since we don't have a proper Arabic font
@@ -165,7 +161,7 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<{ da
   doc.setFontSize(9);
   doc.setTextColor(107, 114, 128); // Gray-500
   doc.setFont('helvetica', 'normal');
-  doc.text(formatDate(sale.createdAt.toString(), lang), pageWidth / 2, yPosition, { align: 'center' });
+  doc.text(formatDate(sale.createdAt, lang), pageWidth / 2, yPosition, { align: 'center' });
 
   yPosition += 12;
 

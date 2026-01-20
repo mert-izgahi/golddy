@@ -8,15 +8,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const getGoldTypeLabel = (lang: "en" | "ar", goldType: string) => {
-  const labels = {
-    GOLD_14: lang === "en" ? "14K" : "١٤ عيار",
-    GOLD_18: lang === "en" ? "18K" : "١٨ عيار",
-    GOLD_21: lang === "en" ? "21K" : "٢١ عيار",
-    GOLD_24: lang === "en" ? "24K" : "٢٤ عيار",
-  };
-  return labels[goldType as keyof typeof labels] || goldType;
-};
 
 export const getPaymentTypeLabel = (paymentType: string, lang: "en" | "ar") => {
   const labels = {
@@ -78,3 +69,72 @@ export const formatCurrency = (
 };
 
 
+
+/**
+ * Get gold type label in the specified language
+ */
+export function getGoldTypeLabel(lang: "en" | "ar", goldType: string): string {
+  const labels = {
+    en: {
+      GOLD_14: "14K Gold",
+      GOLD_18: "18K Gold",
+      GOLD_21: "21K Gold",
+      GOLD_24: "24K Gold",
+    },
+    ar: {
+      GOLD_14: "ذهب عيار ١٤",
+      GOLD_18: "ذهب عيار ١٨",
+      GOLD_21: "ذهب عيار ٢١",
+      GOLD_24: "ذهب عيار ٢٤",
+    }
+  };
+
+  return labels[lang][goldType as keyof typeof labels.en] || goldType;
+}
+
+/**
+ * Get stock type label in the specified language
+ */
+export function getStockTypeLabel(lang: "en" | "ar", stockType: string): string {
+  const labels = {
+    en: {
+      ADD: "Addition",
+      REMOVE: "Removal",
+    },
+    ar: {
+      ADD: "إضافة",
+      REMOVE: "سحب",
+    }
+  };
+
+  return labels[lang][stockType as keyof typeof labels.en] || stockType;
+}
+
+/**
+ * Format quantity with + or - prefix based on stock type
+ */
+export function formatStockQuantity(quantity: number, type: "ADD" | "REMOVE"): string {
+  const prefix = type === "ADD" ? "+" : "-";
+  return `${prefix}${quantity.toFixed(2)}g`;
+}
+
+/**
+ * Calculate total stock value across all gold types
+ */
+export function calculateTotalStockValue(currentStock: Record<string, number>): number {
+  return Object.values(currentStock).reduce((total, quantity) => total + quantity, 0);
+}
+
+/**
+ * Get color class for stock type
+ */
+export function getStockTypeColorClass(type: "ADD" | "REMOVE"): string {
+  return type === "ADD" ? "text-green-600" : "text-red-600";
+}
+
+/**
+ * Get background color class for stock type
+ */
+export function getStockTypeBgColorClass(type: "ADD" | "REMOVE"): string {
+  return type === "ADD" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200";
+}

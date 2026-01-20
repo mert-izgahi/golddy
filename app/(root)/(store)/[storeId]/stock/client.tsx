@@ -1,8 +1,9 @@
-// app/(root)/(store)/[storeId]/stocks/client.tsx
+// app/(root)/(store)/[storeId]/stock/client.tsx
 "use client";
+
 import { Button } from '@/components/ui/button';
-import { useLangStore } from '@/store/lang-store'
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { useLangStore } from '@/store/lang-store';
+import { Edit, Trash2, Package, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useGetStocksByStore, useDeleteStock, useGetStockStats } from '@/hooks/use-stocks';
@@ -25,11 +26,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getGoldTypeLabel } from '@/lib/utils';
 
 interface Props {
-    storeId: string
+    storeId: string;
 }
 
 function StockPage({ storeId }: Props) {
-    const { lang, t } = useLangStore();
+    const { lang } = useLangStore();
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -44,25 +45,15 @@ function StockPage({ storeId }: Props) {
 
     const handleDeleteStock = async (stockId: string) => {
         try {
-            await deleteStockMutation.mutateAsync(stockId);
+            await deleteStockMutation.mutateAsync({ stockId, storeId });
             toast.success(lang === "en" ? "Stock movement deleted successfully" : "تم حذف حركة المخزون بنجاح");
-            // Invalidate both stocks and stats queries
-            queryClient.invalidateQueries({ queryKey: ["get-stocks-by-store", storeId] });
-            queryClient.invalidateQueries({ queryKey: ["get-stock-stats", storeId] });
-        } catch (error) {
-            toast.error(lang === "en" ? "Failed to delete stock movement" : "فشل في حذف حركة المخزون");
+        } catch (error: any) {
+            toast.error(
+                error?.response?.data?.message || 
+                (lang === "en" ? "Failed to delete stock movement" : "فشل في حذف حركة المخزون")
+            );
         }
     };
-
-    // const getGoldTypeLabel = (goldType: string) => {
-    //     const labels = {
-    //         GOLD_14: lang === "en" ? "14K" : "١٤ عيار",
-    //         GOLD_18: lang === "en" ? "18K" : "١٨ عيار",
-    //         GOLD_21: lang === "en" ? "21K" : "٢١ عيار",
-    //         GOLD_24: lang === "en" ? "24K" : "٢٤ عيار"
-    //     };
-    //     return labels[goldType as keyof typeof labels] || goldType;
-    // };
 
     const getStockTypeLabel = (stockType: string) => {
         const labels = {
@@ -91,10 +82,10 @@ function StockPage({ storeId }: Props) {
     // Define columns for DataTable
     const columns: ColumnDef<Stock>[] = [
         {
-            accessorKey: "date",
+            accessorKey: "createdAt",
             header: lang === "en" ? "Date" : "التاريخ",
             cell: ({ row }) => {
-                return dayjs(row.getValue("date")).format('DD/MM/YYYY HH:mm');
+                return dayjs(row.getValue("createdAt")).format('DD/MM/YYYY HH:mm');
             },
         },
         {
@@ -128,14 +119,36 @@ function StockPage({ storeId }: Props) {
             },
         },
         {
+            accessorKey: "balanceAfter",
+            header: lang === "en" ? "Balance After" : "الرصيد بعد",
+            cell: ({ row }) => {
+                const balance = row.getValue("balanceAfter") as number;
+                return (
+                    <span className="font-medium text-blue-600">
+                        {balance.toFixed(2)}g
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: "supplier",
+            header: lang === "en" ? "Supplier" : "المورد",
+            cell: ({ row }) => {
+                const supplier = row.getValue("supplier") as string | null;
+                return supplier || (
+                    <span className="text-muted-foreground italic">-</span>
+                );
+            },
+        },
+        {
             accessorKey: "note",
             header: lang === "en" ? "Notes" : "ملاحظات",
             cell: ({ row }) => {
                 const note = row.getValue("note") as string | null;
-                return note || (
-                    <span className="text-muted-foreground italic">
-                        {lang === "en" ? "No notes" : "لا توجد ملاحظات"}
-                    </span>
+                return note ? (
+                    <span className="text-sm">{note.slice(0, 50)}{note.length > 50 ? '...' : ''}</span>
+                ) : (
+                    <span className="text-muted-foreground italic">-</span>
                 );
             },
         },
@@ -172,8 +185,8 @@ function StockPage({ storeId }: Props) {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                         {lang === "en"
-                                            ? "Are you sure you want to delete this stock movement? This action cannot be undone."
-                                            : "هل أنت متأكد من أنك تريد حذف حركة المخزون هذه؟ لا يمكن التراجع عن هذا الإجراء."
+                                            ? "Are you sure you want to delete this stock movement? This action will revert the balance change and cannot be undone."
+                                            : "هل أنت متأكد من أنك تريد حذف حركة المخزون هذه؟ سيتم إرجاع تغيير الرصيد ولا يمكن التراجع عن هذا الإجراء."
                                         }
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
@@ -217,7 +230,6 @@ function StockPage({ storeId }: Props) {
                     <h1 className="text-2xl font-bold">{title}</h1>
                     <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
-
                 <Button asChild className='bg-teal-800 hover:bg-teal-800/80 text-white'>
                     <Link href={`/${storeId}/stock/new`}>
                         <Package className='mr-2 h-4 w-4' />
@@ -231,28 +243,32 @@ function StockPage({ storeId }: Props) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitle className="text-sm font-medium flex items-center">
+                                <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
                                 {lang === "en" ? "Total Additions" : "إجمالي الإضافات"}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-green-600">
-                                {stockStats.totalAdditions.toFixed(2)}g
+                                +{stockStats.totalAdditions.toFixed(2)}g
                             </div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitle className="text-sm font-medium flex items-center">
+                                <TrendingDown className="h-4 w-4 mr-2 text-red-600" />
                                 {lang === "en" ? "Total Removals" : "إجمالي السحوبات"}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-red-600">
-                                {stockStats.totalRemovals.toFixed(2)}g
+                                -{stockStats.totalRemovals.toFixed(2)}g
                             </div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -265,6 +281,7 @@ function StockPage({ storeId }: Props) {
                             </div>
                         </CardContent>
                     </Card>
+
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -272,7 +289,7 @@ function StockPage({ storeId }: Props) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">
+                            <div className="text-2xl font-bold text-blue-600">
                                 {stockStats.totalMovements}
                             </div>
                         </CardContent>
@@ -292,12 +309,15 @@ function StockPage({ storeId }: Props) {
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {Object.entries(stockStats.currentStock).map(([goldType, quantity]) => (
-                                <div key={goldType} className="flex flex-col items-center justify-center p-4 border rounded-lg">
-                                    <span className="text-sm text-muted-foreground">
+                                <div key={goldType} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+                                    <span className="text-sm text-muted-foreground font-medium">
                                         {getGoldTypeLabel(lang, goldType)}
                                     </span>
-                                    <span className="text-2xl font-bold mt-2">
-                                        {quantity.toFixed(2)}g
+                                    <span className="text-3xl font-bold mt-2 text-yellow-700">
+                                        {quantity.toFixed(2)}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {lang === "en" ? "grams" : "جرام"}
                                     </span>
                                 </div>
                             ))}
@@ -319,15 +339,25 @@ function StockPage({ storeId }: Props) {
 
                 <TabsContent value="movements" className="space-y-4">
                     {/* Stock Movements DataTable */}
-                    <DataTable
-                        columns={columns}
-                        data={stocks}
-                        pagination={pagination}
-                        onPageChange={handlePageChange}
-                        onPageSizeChange={handlePageSizeChange}
-                        isLoading={isLoading}
-                        lang={lang}
-                    />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{lang === "en" ? "Recent Movements" : "الحركات الأخيرة"}</CardTitle>
+                            <CardDescription>
+                                {lang === "en" ? "All stock additions and removals" : "جميع إضافات وسحوبات المخزون"}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <DataTable
+                                columns={columns}
+                                data={stocks}
+                                pagination={pagination}
+                                onPageChange={handlePageChange}
+                                onPageSizeChange={handlePageSizeChange}
+                                isLoading={isLoading}
+                                lang={lang}
+                            />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="stats" className="space-y-4">
@@ -346,7 +376,10 @@ function StockPage({ storeId }: Props) {
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="p-4 border rounded-lg">
-                                                <h3 className="font-semibold mb-2">{lang === "en" ? "Stock Summary" : "ملخص المخزون"}</h3>
+                                                <h3 className="font-semibold mb-2 flex items-center">
+                                                    <Package className="h-4 w-4 mr-2" />
+                                                    {lang === "en" ? "Stock Summary" : "ملخص المخزون"}
+                                                </h3>
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between">
                                                         <span>{lang === "en" ? "Total Added:" : "الإجمالي المضاف:"}</span>
@@ -368,6 +401,7 @@ function StockPage({ storeId }: Props) {
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <div className="p-4 border rounded-lg">
                                                 <h3 className="font-semibold mb-2">{lang === "en" ? "Activity" : "النشاط"}</h3>
                                                 <div className="space-y-2">
@@ -378,6 +412,12 @@ function StockPage({ storeId }: Props) {
                                                     <div className="flex justify-between">
                                                         <span>{lang === "en" ? "Current Stock Types:" : "أنواع المخزون الحالي:"}</span>
                                                         <span className="font-medium">4</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>{lang === "en" ? "Total Stock Value:" : "قيمة المخزون الإجمالية:"}</span>
+                                                        <span className="font-medium">
+                                                            {Object.values(stockStats?.currentStock || {}).reduce((a, b) => a + b, 0).toFixed(2)}g
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -390,7 +430,7 @@ function StockPage({ storeId }: Props) {
                 </TabsContent>
             </Tabs>
         </div>
-    )
+    );
 }
 
-export default StockPage
+export default StockPage;

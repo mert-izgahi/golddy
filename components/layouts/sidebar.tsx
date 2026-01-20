@@ -63,24 +63,24 @@ function Sidebar() {
             icon: <StockIcon size={12} />,
             isActive: pathname === `/${store?.id}/stock`,
         },
-        {
-            label: lang === "en" ? "Exchanges" : "التحويلات",
-            href: `/${store?.id}/exchanges`,
-            icon: <ExchangeIcon size={12} />,
-            isActive: pathname === `/${store?.id}/exchanges`,
-        },
-        {
-            label: lang === "en" ? "Reports" : "التقارير",
-            href: `/${store?.id}/reports`,
-            icon: <ReportsIcon size={12} />,
-            isActive: pathname === `/${store?.id}/reports`,
-        },
-        {
-            label: lang === "en" ? "Exchange Rates" : "أسعار الصرف",
-            href: `/${store?.id}/exchange-rates`,
-            icon: <ExchangeRatesIcon size={12} />,
-            isActive: pathname === `/${store?.id}/exchange-rates`,
-        },
+        // {
+        //     label: lang === "en" ? "Exchanges" : "التحويلات",
+        //     href: `/${store?.id}/exchanges`,
+        //     icon: <ExchangeIcon size={12} />,
+        //     isActive: pathname === `/${store?.id}/exchanges`,
+        // },
+        // {
+        //     label: lang === "en" ? "Reports" : "التقارير",
+        //     href: `/${store?.id}/reports`,
+        //     icon: <ReportsIcon size={12} />,
+        //     isActive: pathname === `/${store?.id}/reports`,
+        // },
+        // {
+        //     label: lang === "en" ? "Exchange Rates" : "أسعار الصرف",
+        //     href: `/${store?.id}/exchange-rates`,
+        //     icon: <ExchangeRatesIcon size={12} />,
+        //     isActive: pathname === `/${store?.id}/exchange-rates`,
+        // },
     ];
 
     const settingsLinks = [
@@ -90,12 +90,12 @@ function Sidebar() {
             icon: <StoreIcon size={12} />,
             isActive: pathname === `/${store?.id}/store-settings`,
         },
-        {
-            label: lang === "en" ? "Account" : "الحساب",
-            href: `/${store?.id}/account`,
-            icon: <SettingsIcon size={12} />,
-            isActive: pathname === `/${store?.id}/account`,
-        },
+        // {
+        //     label: lang === "en" ? "Account" : "الحساب",
+        //     href: `/${store?.id}/account`,
+        //     icon: <SettingsIcon size={12} />,
+        //     isActive: pathname === `/${store?.id}/account`,
+        // },
     ];
 
     if (isLoading) {

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from '@tansta
 import axios from 'axios';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';
 import { Stock } from '@/lib/generated/prisma/client';
-import { CreateStockInput, UpdateStockInput } from '@/lib/zod';
+import { CreateStockInput, UpdateStockInput } from '@/zod/stock.schemas';
 
 // Hook to get stock movements by store with pagination
 export const useGetStocksByStore = (storeId: string, page: number = 1, limit: number = 10) => {
@@ -78,30 +78,60 @@ export const useGetStockById = (stockId: string) => {
 
 // Hook to create a new stock movement
 export const useCreateStock = () => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: async ({ storeId, data }: { storeId: string; data: CreateStockInput }) => {
             const response = await axios.post<ApiResponse<Stock>>(`/api/stock/store/${storeId}`, data);
             return response.data.result;
+        },
+        onSuccess: (_, variables) => {
+            // Invalidate and refetch queries
+            queryClient.invalidateQueries({ queryKey: ['get-stocks-by-store', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-stocks-infinite', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-stock-stats', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-current-stock', variables.storeId] });
         },
     });
 };
 
 // Hook to update a stock movement
 export const useUpdateStock = () => {
+    const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: UpdateStockInput }) => {
+        mutationFn: async ({ id, data, storeId }: { id: string; data: UpdateStockInput; storeId?: string }) => {
             const response = await axios.put<ApiResponse<Stock>>(`/api/stock/${id}`, data);
             return response.data.result;
+        },
+        onSuccess: (data, variables) => {
+            // Invalidate queries
+            queryClient.invalidateQueries({ queryKey: ['get-stock-by-id', variables.id] });
+            if (variables.storeId) {
+                queryClient.invalidateQueries({ queryKey: ['get-stocks-by-store', variables.storeId] });
+                queryClient.invalidateQueries({ queryKey: ['get-stocks-infinite', variables.storeId] });
+                queryClient.invalidateQueries({ queryKey: ['get-stock-stats', variables.storeId] });
+                queryClient.invalidateQueries({ queryKey: ['get-current-stock', variables.storeId] });
+            }
         },
     });
 };
 
 // Hook to delete a stock movement
 export const useDeleteStock = () => {
+    const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async (stockId: string) => {
+        mutationFn: async ({ stockId, storeId }: { stockId: string; storeId: string }) => {
             const response = await axios.delete<ApiResponse<null>>(`/api/stock/${stockId}`);
             return response.data;
+        },
+        onSuccess: (_, variables) => {
+            // Invalidate queries
+            queryClient.invalidateQueries({ queryKey: ['get-stocks-by-store', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-stocks-infinite', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-stock-stats', variables.storeId] });
+            queryClient.invalidateQueries({ queryKey: ['get-current-stock', variables.storeId] });
         },
     });
 };

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLangStore } from "@/store/lang-store";
-import { getCreateStockSchema, getUpdateStockSchema, CreateStockInput, UpdateStockInput } from "@/lib/zod";
+import { getCreateStockSchema, getUpdateStockSchema, CreateStockInput, UpdateStockInput } from "@/zod/stock.schemas";
 import { useCreateStock, useUpdateStock, useGetStockById } from "@/hooks/use-stocks";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,16 +29,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CalendarIcon, Package, MinusCircle, PlusCircle } from "lucide-react";
+import { Loader2, Package, MinusCircle, PlusCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StockType, GoldType } from "@/lib/generated/prisma";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-
-import { enUS, ar } from "date-fns/locale";
 
 interface StockFormProps {
     storeId: string;
@@ -66,23 +62,31 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                 : updateSchema
         ),
         defaultValues: {
-            date: new Date(),
             quantity: 0,
             goldType: GoldType.GOLD_14,
             type: StockType.ADD,
             note: "",
+            costPerGramUSD: null,
+            totalCostUSD: null,
+            totalCostSYP: null,
+            supplier: "",
+            invoiceRef: "",
         },
-    } as any);
+    });
 
     // Set form values when in edit mode and stock data is loaded
     useEffect(() => {
         if (mode === "edit" && stock) {
             form.reset({
-                date: new Date(stock.date) as Date,
                 quantity: stock.quantity,
                 goldType: stock.goldType as any,
                 type: stock.type as any,
                 note: stock.note || "",
+                costPerGramUSD: stock.costPerGramUSD || null,
+                totalCostUSD: stock.totalCostUSD || null,
+                totalCostSYP: stock.totalCostSYP || null,
+                supplier: stock.supplier || "",
+                invoiceRef: stock.invoiceRef || "",
             });
         }
     }, [stock, form, mode]);
@@ -108,7 +112,8 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                 }
                 await updateStockMutation.mutateAsync({
                     id: stockId,
-                    data: data as UpdateStockInput
+                    data: data as UpdateStockInput,
+                    storeId
                 });
                 toast.success(
                     lang === "en"
@@ -119,7 +124,7 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
             router.push(`/${storeId}/stock`);
         } catch (error: any) {
             toast.error(
-                error?.message ||
+                error?.response?.data?.message || error?.message ||
                 (mode === "create"
                     ? lang === "en"
                         ? "Failed to create stock movement"
@@ -143,13 +148,13 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
             value: StockType.ADD,
             label: lang === "en" ? "Add Stock" : "إضافة مخزون",
             icon: <PlusCircle className="h-4 w-4 mr-2" />,
-            color: "text-green-600 bg-green-50 border-green-200"
+            color: "text-green-600"
         },
         {
             value: StockType.REMOVE,
             label: lang === "en" ? "Remove Stock" : "سحب من المخزون",
             icon: <MinusCircle className="h-4 w-4 mr-2" />,
-            color: "text-red-600 bg-red-50 border-red-200"
+            color: "text-red-600"
         },
     ];
 
@@ -214,55 +219,6 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Date */}
-                            <FormField
-                                control={form.control}
-                                name="date"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>
-                                            {lang === "en" ? "Date & Time" : "التاريخ والوقت"}
-                                        </FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant="outline"
-                                                        className={cn(
-                                                            "w-full pl-3 text-left font-normal",
-                                                            !field.value && "text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {field.value ? (
-                                                            format(field.value, "PPP HH:mm", {
-                                                                locale: lang === "en" ? enUS : ar
-                                                            })
-                                                        ) : (
-                                                            <span>
-                                                                {lang === "en" ? "Pick a date" : "اختر تاريخاً"}
-                                                            </span>
-                                                        )}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    disabled={(date) =>
-                                                        date > new Date() || date < new Date("1900-01-01")
-                                                    }
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
                             {/* Stock Type */}
                             <FormField
                                 control={form.control}
@@ -270,7 +226,7 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            {lang === "en" ? "Movement Type" : "نوع الحركة"}
+                                            {lang === "en" ? "Movement Type *" : "نوع الحركة *"}
                                         </FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
@@ -286,9 +242,8 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                                     <SelectItem
                                                         key={option.value}
                                                         value={option.value}
-                                                        className={option.color}
                                                     >
-                                                        <div className="flex items-center">
+                                                        <div className={cn("flex items-center", option.color)}>
                                                             {option.icon}
                                                             {option.label}
                                                         </div>
@@ -308,14 +263,14 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            {lang === "en" ? "Gold Type" : "نوع الذهب"}
+                                            {lang === "en" ? "Gold Type *" : "نوع الذهب *"}
                                         </FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="w-full" lang={lang}>
+                                                <SelectTrigger className="w-full">
                                                     <SelectValue placeholder={lang === "en" ? "Select gold type" : "اختر نوع الذهب"} />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -339,19 +294,7 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            {lang === "en" ? "Quantity (grams)" : "الكمية (جرام)"}
-                                            {form.watch("type") === StockType.ADD && (
-                                                <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">
-                                                    <PlusCircle className="h-3 w-3 mr-1" />
-                                                    {lang === "en" ? "Adding" : "إضافة"}
-                                                </Badge>
-                                            )}
-                                            {form.watch("type") === StockType.REMOVE && (
-                                                <Badge className="ml-2 bg-red-100 text-red-800 hover:bg-red-100">
-                                                    <MinusCircle className="h-3 w-3 mr-1" />
-                                                    {lang === "en" ? "Removing" : "سحب"}
-                                                </Badge>
-                                            )}
+                                            {lang === "en" ? "Quantity (grams) *" : "الكمية (جرام) *"}
                                         </FormLabel>
                                         <FormControl>
                                             <div className="relative">
@@ -365,8 +308,8 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                                     className={cn(
                                                         "pr-10",
-                                                        form.watch("type") === StockType.ADD && "border-green-300",
-                                                        form.watch("type") === StockType.REMOVE && "border-red-300"
+                                                        form.watch("type") === StockType.ADD && "border-green-300 focus:border-green-500",
+                                                        form.watch("type") === StockType.REMOVE && "border-red-300 focus:border-red-500"
                                                     )}
                                                 />
                                                 <div className={cn(
@@ -381,6 +324,131 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                     </FormItem>
                                 )}
                             />
+
+                            {/* Supplier */}
+                            <FormField
+                                control={form.control}
+                                name="supplier"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            {lang === "en" ? "Supplier" : "المورد"}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder={lang === "en" ? "Supplier name" : "اسم المورد"}
+                                                {...field}
+                                                value={field.value || ""}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {/* Cost Information Section */}
+                        <div className="border-t pt-4">
+                            <h3 className="text-sm font-medium mb-3">
+                                {lang === "en" ? "Cost Information (Optional)" : "معلومات التكلفة (اختياري)"}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Cost Per Gram USD */}
+                                <FormField
+                                    control={form.control}
+                                    name="costPerGramUSD"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Cost/Gram (USD)" : "التكلفة/جرام (دولار)"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Total Cost USD */}
+                                <FormField
+                                    control={form.control}
+                                    name="totalCostUSD"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Total Cost (USD)" : "التكلفة الإجمالية (دولار)"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Total Cost SYP */}
+                                <FormField
+                                    control={form.control}
+                                    name="totalCostSYP"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {lang === "en" ? "Total Cost (SYP)" : "التكلفة الإجمالية (ل.س)"}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    {...field}
+                                                    value={field.value || ""}
+                                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Additional Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Invoice Reference */}
+                            <FormField
+                                control={form.control}
+                                name="invoiceRef"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            {lang === "en" ? "Invoice Reference" : "مرجع الفاتورة"}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder={lang === "en" ? "INV-001" : "فاتورة-001"}
+                                                {...field}
+                                                value={field.value || ""}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
 
                         {/* Note */}
@@ -390,13 +458,13 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>
-                                        {lang === "en" ? "Notes (Optional)" : "ملاحظات (اختياري)"}
+                                        {lang === "en" ? "Notes" : "ملاحظات"}
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
                                             placeholder={lang === "en"
-                                                ? "Enter reason for stock movement, supplier info, or any additional notes"
-                                                : "أدخل سبب حركة المخزون، معلومات المورد، أو أي ملاحظات إضافية"
+                                                ? "Enter reason for stock movement or any additional notes"
+                                                : "أدخل سبب حركة المخزون أو أي ملاحظات إضافية"
                                             }
                                             className="resize-none"
                                             rows={4}
@@ -460,18 +528,8 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                         form.watch("type") === StockType.ADD && "text-green-600",
                                         form.watch("type") === StockType.REMOVE && "text-red-600"
                                     )}>
-                                        {form.watch("quantity")?.toFixed(2)}g
-                                    </div>
-
-                                    <div>
-                                        <span className="text-muted-foreground">
-                                            {lang === "en" ? "Date:" : "التاريخ:"}
-                                        </span>
-                                    </div>
-                                    <div className="text-right font-medium">
-                                        {form.watch("date") && format(form.watch("date")!, "dd/MM/yyyy", {
-                                            locale: lang === "en" ? enUS : ar
-                                        })}
+                                        {form.watch("type") === StockType.ADD ? '+' : '-'}
+                                        {form.watch("quantity")?.toFixed(2) || '0.00'}g
                                     </div>
                                 </div>
                             </CardContent>
@@ -492,8 +550,7 @@ export function StockForm({ storeId, mode, stockId }: StockFormProps) {
                                 disabled={isPending}
                                 className={cn(
                                     form.watch("type") === StockType.ADD && "bg-green-600 hover:bg-green-700",
-                                    form.watch("type") === StockType.REMOVE && "bg-red-600 hover:bg-red-700",
-                                    !form.watch("type") && "bg-teal-800 hover:bg-teal-800/80"
+                                    form.watch("type") === StockType.REMOVE && "bg-red-600 hover:bg-red-700"
                                 )}
                             >
                                 {isPending && (
