@@ -1,0 +1,279 @@
+// --------------------------------------------------------
+//  Prisma Schema for Gold & Currency SaaS Platform
+// --------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --------------------------------------------------------
+//  MODEL: User (Admin + Store Account)
+// --------------------------------------------------------
+// Used for authentication and access control.
+// Role determines if user is a global admin or store owner/employee.
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String?
+  role        Role     @default(STORE)
+  phoneNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // Relations
+  stores      Store[]
+}
+
+// --------------------------------------------------------
+//  MODEL: Store
+// --------------------------------------------------------
+model Store {
+  id                   String      @id @default(cuid())
+  name                 String      @unique
+  address              String?
+  city                 String?
+  logoUrl              String?
+  primaryPhoneNumber   String?
+  secondaryPhoneNumber String?
+  status               StoreStatus @default(ACTIVE)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  // Initial/Current Inventory (in grams)
+  currentGold14 Float @default(0)
+  currentGold18 Float @default(0)
+  currentGold21 Float @default(0)
+  currentGold24 Float @default(0)
+
+  // Current Cash Balance
+  currentUSD Float @default(0)
+  currentSYP Float @default(0)
+
+  // Store Prices Settings
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
+
+  // Current Exchange Rate
+  exchangeRateUSDtoSYP Float @default(0)
+
+  // Relations
+  owner     User       @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  sales     Sale[]
+  stocks    Stock[]
+  exchanges Exchange[]
+  reports   Report[]
+}
+
+// --------------------------------------------------------
+//  MODEL: Sale
+// --------------------------------------------------------
+// Represents each gold sale operation (by gram)
+model Sale {
+  id            String @id @default(cuid())
+  invoiceNumber String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Gold Details
+  weight          Float
+  goldType        GoldType
+  pricePerGramUSD Float
+  pricePerGramSYP Float
+
+  // Totals
+  totalUSD Float
+  totalSYP Float
+
+  // Payment Details
+  currency    CurrencyType
+  paymentType PaymentType // CASH, TRANSFER, OTHER
+  amountPaid  Float // Actual amount paid in chosen currency
+
+  // Customer & Notes
+  customerName  String?
+  customerPhone String?
+  description   String?
+
+  // Relations
+  report   Report? @relation(fields: [reportId], references: [id])
+  reportId String?
+  store    Store   @relation(fields: [storeId], references: [id])
+  storeId  String
+
+  // Additional fields
+  profitUSD Float
+  profitSYP Float
+
+  @@index([storeId, createdAt])
+  @@index([invoiceNumber])
+  @@index([reportId])
+}
+
+// --------------------------------------------------------
+//  MODEL: StockMovement
+// --------------------------------------------------------
+// Tracks gold stock movements (add/remove)
+model Stock {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  goldType GoldType
+  quantity Float // In grams (positive for ADD, stored as-is)
+  type     StockType // ADD or REMOVE
+
+  // Balances after this movement
+  balanceAfter Float
+
+  // Cost tracking (for purchases)
+  costPerGramUSD Float?
+  totalCostUSD   Float?
+  totalCostSYP   Float?
+
+  supplier   String?
+  invoiceRef String?
+  note       String?
+
+  // Relations
+  report   Report? @relation(fields: [reportId], references: [id])
+  reportId String?
+  store    Store   @relation(fields: [storeId], references: [id])
+  storeId  String
+
+  @@index([storeId, createdAt])
+  @@index([goldType])
+  @@index([reportId])
+}
+
+// --------------------------------------------------------
+//  MODEL: Exchange
+// --------------------------------------------------------
+// Currency exchange operations between USD and SYP
+model Exchange {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Exchange details (if type is EXCHANGE)
+  fromCurrency    CurrencyType?
+  toCurrency      CurrencyType?
+  exchangeRate    Float?
+  amountFrom      Float?
+  amountTo        Float?
+  // Balances after this movement
+  balanceUSDAfter Float
+  balanceSYPAfter Float
+
+  // Relations
+  report   Report? @relation(fields: [reportId], references: [id])
+  reportId String?
+  store    Store   @relation(fields: [storeId], references: [id])
+  storeId  String
+
+  @@index([storeId, createdAt])
+  @@index([reportId])
+}
+
+// --------------------------------------------------------
+//  MODEL: Report
+// --------------------------------------------------------
+// Tracks daily balances and connects all daily records
+model Report {
+  id            String   @id @default(cuid())
+  date          DateTime @default(now())
+  openingUSD    Float    @default(0)
+  closingUSD    Float    @default(0)
+  openingSYP    Float    @default(0)
+  closingSYP    Float    @default(0)
+  openingGold14 Float    @default(0)
+  closingGold14 Float    @default(0)
+  openingGold18 Float    @default(0)
+  closingGold18 Float    @default(0)
+  openingGold21 Float    @default(0)
+  closingGold21 Float    @default(0)
+  openingGold24 Float    @default(0)
+  closingGold24 Float    @default(0)
+
+  // Prices from Admin Settings
+  priceGold14USD Float @default(0)
+  priceGold18USD Float @default(0)
+  priceGold21USD Float @default(0)
+  priceGold24USD Float @default(0)
+
+  priceGold14SYP Float @default(0)
+  priceGold18SYP Float @default(0)
+  priceGold21SYP Float @default(0)
+  priceGold24SYP Float @default(0)
+
+  // Exchange Rate Of Report for Selected Date
+  exchangeRateUSDtoSYP Float @default(0)
+
+  totalGoldSold Float     @default(0)
+  totalSalesUSD Float     @default(0)
+  totalSalesSYP Float     @default(0)
+  profitUSD     Float     @default(0)
+  profitSYP     Float     @default(0)
+  notes         String?
+  status        DayStatus @default(Opening)
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  store     Store      @relation(fields: [storeId], references: [id])
+  storeId   String
+  sales     Sale[]
+  stocks    Stock[]
+  exchanges Exchange[]
+}
+
+// --------------------------------------------------------
+//  ENUMS
+// --------------------------------------------------------
+
+enum Role {
+  ADMIN
+  STORE
+}
+
+enum StoreStatus {
+  BAND
+  ACTIVE
+  SUSPEND
+}
+
+enum CurrencyType {
+  USD
+  SYP
+}
+
+enum PaymentType {
+  CASH
+  SHAM_CASH
+  OTHER
+}
+
+enum StockType {
+  ADD
+  REMOVE
+}
+
+enum GoldType {
+  GOLD_14
+  GOLD_18
+  GOLD_21
+  GOLD_24
+}
+
+enum DayStatus {
+  Opening
+  Closed
+}
