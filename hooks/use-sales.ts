@@ -2,7 +2,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';
-import { Sale } from '../lib/generated/prisma/client';
+import { Sale } from '@/lib/generated/prisma/client';
 import { CreateSaleInput, UpdateSaleInput } from '@/lib/zod';
 
 // Hook to get sales by store with pagination

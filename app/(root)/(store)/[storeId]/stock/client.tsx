@@ -14,7 +14,7 @@ import dayjs from 'dayjs';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { Stock } from '../lib/generated/prisma/client';
+import { Stock } from '@/lib/generated/prisma/client';
 import {
     Card,
     CardContent,

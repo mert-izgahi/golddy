@@ -29,7 +29,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Role } from "../lib/generated/prisma/client";
+import { Role } from "@/lib/generated/prisma";
 import { PasswordInput } from "@/components/inputs/password-input";
 import { z } from "zod";
 

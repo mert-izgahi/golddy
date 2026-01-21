@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import type { ApiResponseWithPagination, ApiResponse } from '@/lib/types';
-import { Stock } from '../lib/generated/prisma/client';
+import { Stock } from '@/lib/generated/prisma/client';
 import { CreateStockInput, UpdateStockInput } from '@/zod/stock.schemas';
 
 // Hook to get stock movements by store with pagination

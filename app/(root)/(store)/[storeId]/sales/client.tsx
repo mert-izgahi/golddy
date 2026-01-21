@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { Sale } from '../lib/generated/prisma/client';
+import { Sale } from '@/lib/generated/prisma/client';
 import { formatCurrency, formatDate, getPaymentTypeLabel } from '@/lib/utils';
 import { InvoiceDialog } from '@/components/invoice/invoice-dialog';
 

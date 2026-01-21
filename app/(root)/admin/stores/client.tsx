@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useLangStore } from '@/store/lang-store';
 import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { Store } from '../lib/generated/prisma';
+import { Store } from '@/lib/generated/prisma';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';

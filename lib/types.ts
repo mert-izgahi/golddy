@@ -1,4 +1,4 @@
-import type { Role, Store, User } from "../lib/generated/prisma"
+import type { Role, Store, User } from "@/lib/generated/prisma"
 
 export type ContextUser = Pick<User, "id" | "email" | "role">
 

@@ -2,8 +2,8 @@ import prisma from "@/lib/prisma";
 import { Hono } from "hono";
 import { authenticate, authorize } from "@/lib/auth-middlewares";
 import { ContextUser } from "@/lib/types";
-import { Role } from "../lib/generated/prisma";
-import { StoreStatus } from "../lib/generated/prisma/client";
+import { Role } from "@/lib/generated/prisma";
+import { StoreStatus } from "@/lib/generated/prisma/client";
 
 const storesRoutes = new Hono();
 

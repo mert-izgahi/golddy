@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Package, MinusCircle, PlusCircle, Scale, DollarSign, FileText, ClipboardList, Calculator, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StockType, GoldType } from "../lib/generated/prisma";
+import { StockType, GoldType } from "@/lib/generated/prisma";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
