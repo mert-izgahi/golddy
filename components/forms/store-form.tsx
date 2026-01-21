@@ -19,21 +19,13 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Building2, Coins, DollarSign, Settings, PlusCircle, MinusCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StoreStatus } from "../lib/generated/prisma/client";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { StoreStatus } from "@/lib/generated/prisma";
 
 interface CreateStoreFormProps {
     mode?: "create" | "edit";
