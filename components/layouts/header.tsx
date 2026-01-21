@@ -1,5 +1,5 @@
 "use client"
-import { Store } from '@/lib/generated/prisma'
+import { Store } from '../lib/generated/prisma'
 import DateTimeArea from '../shared/date-time'
 import UserButton from '../buttons/user-button'
 import LangSwitcher from '../shared/lang-switcher'

@@ -10,7 +10,7 @@ import {
     type CreateStockInput,
     type UpdateStockInput
 } from "@/zod/stock.schemas";
-import { GoldType } from "@/lib/generated/prisma";
+import { GoldType } from "../lib/generated/prisma";
 
 const stockRoutes = new Hono();
 

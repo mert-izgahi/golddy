@@ -5,7 +5,7 @@ import { authenticate } from "@/lib/auth-middlewares";
 import { ContextUser } from "@/lib/types";
 import { zValidator } from "@hono/zod-validator";
 import { getCreateSaleSchema, getUpdateSaleSchema } from "@/lib/zod";
-import { GoldType, CurrencyType } from "@/lib/generated/prisma/client";
+import { GoldType, CurrencyType } from "../lib/generated/prisma/client";
 import { getCurrentPrices, getPricePerGram, getStoreGoldBalance } from "@/services/pricing.service";
 
 const salesRoutes = new Hono();

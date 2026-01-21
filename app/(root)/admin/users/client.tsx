@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { User } from '@/lib/generated/prisma/client';
+import { User } from '../lib/generated/prisma/client';
 import { formatDate } from '@/lib/utils';
 
 function AdminUsersPage() {

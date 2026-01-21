@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import prisma from "@/lib/prisma";
 import { authenticate, authorize } from "@/lib/auth-middlewares";
-import { Role } from "@/lib/generated/prisma";
+import { Role } from "../lib/generated/prisma";
 import { zValidator } from "@hono/zod-validator";
 
 import { hashPassword } from "@/lib/hash-password";

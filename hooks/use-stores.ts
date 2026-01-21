@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { Store } from "@/lib/generated/prisma";
+import { Store } from "../lib/generated/prisma";
 import { ApiResponseWithPagination } from "@/lib/types";
 import { StoreInput } from "@/lib/zod";
 

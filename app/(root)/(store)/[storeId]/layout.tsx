@@ -2,7 +2,7 @@ import Header from '@/components/layouts/header';
 import Sidebar from '@/components/layouts/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { getAuthUser } from '@/lib/actions';
-import { Role } from '@/lib/generated/prisma';
+import { Role } from '../lib/generated/prisma';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { PropsWithChildren } from 'react'
