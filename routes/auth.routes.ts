@@ -166,7 +166,8 @@ authRoutes
         if (parsed.data.newPassword) {
             updateData.password = await hashPassword(parsed.data.newPassword);
         }
-
+        console.log(parsed.data.newPassword);
+        
         const updatedUser = await prisma.user.update({
             where: { id: user.id },
             data: updateData,

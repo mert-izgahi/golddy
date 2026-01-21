@@ -41,4 +41,39 @@ async function seedAdmin() {
 }
 
 // Run the seed
-seedAdmin()
+// seedAdmin()
+
+
+async function resetUserPassword() {
+    const email = "user@example.com";
+    const pass = "password123";
+
+    const hashedPassword = await hashPassword(pass);
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+        
+        if (user) {
+            await prisma.user.update({
+                where: {
+                    email
+                },
+                data: {
+                    password: hashedPassword
+                }
+            });
+        }
+
+        console.log('✅ User password reset successfully!\n');
+    } catch (error) {
+        console.error('❌ Error resetting user password:');
+        console.error(error);
+        process.exit(1);
+    }
+}
+
+resetUserPassword();
