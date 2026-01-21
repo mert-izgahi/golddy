@@ -68,7 +68,7 @@ export default function StoreForm({
             priceGold18USD: 0,
             priceGold21USD: 0,
             priceGold24USD: 0,
-            exchangeRateUSDtoSYP: 0,
+            exchangeRateUSDtoSYP: 260, // Changed from 0 to 260 (sensible default)
         },
     });
 
@@ -118,7 +118,7 @@ export default function StoreForm({
                     lang === "en" ? "Store updated successfully" : "تم تحديث المتجر بنجاح"
                 );
             }
-            router.refresh();
+            router.push(`/`);
         } catch (error: any) {
             toast.error(
                 error?.message ||
@@ -141,27 +141,42 @@ export default function StoreForm({
 
     // Calculate totals
     const calculateTotals = () => {
-        const gold14 = form.watch("currentGold14") || 0;
-        const gold18 = form.watch("currentGold18") || 0;
-        const gold21 = form.watch("currentGold21") || 0;
-        const gold24 = form.watch("currentGold24") || 0;
+    const gold14 = form.watch("currentGold14") || 0;
+    const gold18 = form.watch("currentGold18") || 0;
+    const gold21 = form.watch("currentGold21") || 0;
+    const gold24 = form.watch("currentGold24") || 0;
 
-        const price14 = form.watch("priceGold14USD") || 0;
-        const price18 = form.watch("priceGold18USD") || 0;
-        const price21 = form.watch("priceGold21USD") || 0;
-        const price24 = form.watch("priceGold24USD") || 0;
+    const price14 = form.watch("priceGold14USD") || 0;
+    const price18 = form.watch("priceGold18USD") || 0;
+    const price21 = form.watch("priceGold21USD") || 0;
+    const price24 = form.watch("priceGold24USD") || 0;
 
-        const totalGoldWeight = gold14 + gold18 + gold21 + gold24;
-        const totalGoldValue = (gold14 * price14) + (gold18 * price18) + (gold21 * price21) + (gold24 * price24);
-        const totalCash = (form.watch("currentUSD") || 0) + ((form.watch("currentSYP") || 0) / (form.watch("exchangeRateUSDtoSYP") || 1));
+    const usdBalance = form.watch("currentUSD") || 0;
+    const sypBalance = form.watch("currentSYP") || 0;
+    const exchangeRate = form.watch("exchangeRateUSDtoSYP") || 260; // Use 260 as fallback
 
-        return {
-            totalGoldWeight,
-            totalGoldValue,
-            totalCash,
-            totalInventory: totalGoldValue + totalCash
-        };
+    const totalGoldWeight = gold14 + gold18 + gold21 + gold24;
+    const totalGoldValue = (gold14 * price14) + (gold18 * price18) + (gold21 * price21) + (gold24 * price24);
+
+    // FIXED: Handle division by zero or very small numbers
+    let sypInUSD = 0;
+    if (exchangeRate > 0) {
+        sypInUSD = sypBalance / exchangeRate;
+    } else {
+        // If exchange rate is 0 or negative, don't convert SYP
+        sypInUSD = 0;
+    }
+    
+    const totalCashUSD = usdBalance + sypInUSD;
+
+    return {
+        totalGoldWeight,
+        totalGoldValue,
+        totalCash: totalCashUSD,
+        totalInventory: totalGoldValue + totalCashUSD,
+        exchangeRate // Return this for display
     };
+};
 
     const totals = calculateTotals();
 

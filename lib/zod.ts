@@ -20,6 +20,35 @@ export const getSignInSchema = (lang: "en" | "ar") => {
     });
 };
 
+export const getUpdateProfileSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+
+    return z.object({
+        name: z.string(requiredMessage),
+        phoneNumber: z.string().regex(/^\+?[0-9]{8,15}$/, {
+            message:
+                lang === "en"
+                    ? "Invalid phone number"
+                    : "رقم الجوال غير صالح",
+        }),
+    });
+}
+
+export const getUpdatePasswordSchema = (lang: "en" | "ar") => {
+    const requiredMessage =
+        lang === "en" ? "This field is required" : "هذا الحقل مطلوب";
+    const passwordMessage =
+        lang === "en"
+            ? "Password must be at least 6 characters long"
+            : "يجب أن يكون طول كلمة المرور 6 أحرف على الأقل";
+
+    return z.object({
+        currentPassword: z.string().min(6, passwordMessage),
+        newPassword: z.string().min(6, passwordMessage),
+    });
+}
+
 // ✅ Create Sale schema
 // export const getCreateSaleSchema = (lang: "en" | "ar") => {
 //     const requiredMessage =
@@ -420,3 +449,5 @@ export type UpdateStockInput = z.infer<ReturnType<typeof getUpdateStockSchema>>;
 export type UpdateSettingsInput = z.infer<ReturnType<typeof getUpdateSettingsSchema>>;
 export type UserInput = z.infer<ReturnType<typeof getUserSchema>>;
 export type StoreInput = z.infer<ReturnType<typeof getStoreSchema>>;
+export type UpdateProfileInput = z.infer<ReturnType<typeof getUpdateProfileSchema>>;
+export type UpdatePasswordInput = z.infer<ReturnType<typeof getUpdatePasswordSchema>>;

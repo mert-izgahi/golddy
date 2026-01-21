@@ -3,12 +3,12 @@ import { hashPassword, comparePassword } from "@/lib/hash-password";
 import { generateToken } from "@/lib/jwt";
 import prisma from "@/lib/prisma";
 import { authenticate } from "@/lib/auth-middlewares";
-import { getSignInSchema } from "@/lib/zod";
+import { getSignInSchema, getUpdateProfileSchema, getUpdatePasswordSchema } from "@/lib/zod";
 import { zValidator } from "@hono/zod-validator";
 import { ContextUser } from "@/lib/types";
 
-
 export const authRoutes = new Hono();
+
 const signInSchema = getSignInSchema("en");
 
 authRoutes
@@ -80,6 +80,7 @@ authRoutes
                 email: true,
                 role: true,
                 name: true,
+                phoneNumber: true,
                 stores: true,
                 createdAt: true,
                 updatedAt: true,
@@ -98,7 +99,7 @@ authRoutes
     // @route   PUT /auth/me
     // @access  Private
     // @method  Put
-    .put("/me", authenticate, zValidator("json", signInSchema.partial(), (result, c) => {
+    .put("/me", authenticate, zValidator("json", getUpdateProfileSchema("en"), (result, c) => {
         if (!result.success) {
             return c.json({ message: "Invalid request data", result: null, success: false }, 400);
         }
@@ -110,7 +111,7 @@ authRoutes
         }
 
         const body = await c.req.json();
-        const parsed = signInSchema.partial().safeParse(body);
+        const parsed = getUpdateProfileSchema("en").safeParse(body);
 
         if (!parsed.success) {
             return c.json({ message: "Invalid request data", result: null, success: false }, 400);
@@ -118,12 +119,12 @@ authRoutes
 
         const updateData: any = {};
 
-        if (parsed.data.email) {
-            updateData.email = parsed.data.email;
+        if (parsed.data.name) {
+            updateData.name = parsed.data.name;
         }
 
-        if (parsed.data.password) {
-            updateData.password = await hashPassword(parsed.data.password);
+        if (parsed.data.phoneNumber) {
+            updateData.phoneNumber = parsed.data.phoneNumber;
         }
 
         const updatedUser = await prisma.user.update({
@@ -140,7 +141,45 @@ authRoutes
         });
 
         return c.json({ message: "User updated successfully", result: updatedUser, success: true });
-    });
+    })
 
+    .put("/me/password", authenticate, zValidator("json", getUpdatePasswordSchema("en"), (result, c) => {
+        if (!result.success) {
+            return c.json({ message: "Invalid request data", result: null, success: false }, 400);
+        }
+    }), async (c) => {
+        const user = c.get("user") as ContextUser;
 
-    
+        if (!user) {
+            return c.json({ message: "User not found", result: null, success: false }, 404);
+        }
+
+        const body = await c.req.json();
+        const parsed = getUpdatePasswordSchema("en").safeParse(body);
+
+        if (!parsed.success) {
+            return c.json({ message: "Invalid request data", result: null, success: false }, 400);
+        }
+
+        const updateData: any = {};
+
+        if (parsed.data.newPassword) {
+            updateData.password = await hashPassword(parsed.data.newPassword);
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: updateData,
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                name: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+
+        return c.json({ message: "User updated successfully", result: updatedUser, success: true });
+    })
+

@@ -1,8 +1,9 @@
 import React from 'react'
+import AccountPage from './client'
 
 function page() {
     return (
-        <div>page</div>
+        <AccountPage />
     )
 }
 

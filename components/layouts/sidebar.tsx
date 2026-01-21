@@ -90,12 +90,12 @@ function Sidebar() {
             icon: <StoreIcon size={12} />,
             isActive: pathname === `/${store?.id}/settings`,
         },
-        // {
-        //     label: lang === "en" ? "Account" : "الحساب",
-        //     href: `/${store?.id}/account`,
-        //     icon: <SettingsIcon size={12} />,
-        //     isActive: pathname === `/${store?.id}/account`,
-        // },
+        {
+            label: lang === "en" ? "Account" : "الحساب",
+            href: `/${store?.id}/account`,
+            icon: <SettingsIcon size={12} />,
+            isActive: pathname === `/${store?.id}/account`,
+        },
     ];
 
     if (isLoading) {
