@@ -22,7 +22,7 @@ async function page() {
       ownerId: user.id
     }
   });
-  
+
   if (store) {
     redirect(`/${store.id}`)
   } else {
