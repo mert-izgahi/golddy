@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useGetSalesByStore, useDeleteSale } from '@/hooks/use-sales';
 import { useSaleInvoice } from '@/hooks/use-sale-invoice';
-import { InvoiceData } from '@/lib/pdf-generator';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';

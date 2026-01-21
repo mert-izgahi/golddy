@@ -39,11 +39,11 @@ function UserButton({ storeId }: UserButtonProps) {
     }
 
     const menuItems = [
-        {
-            label: t("Account Settings", "إعدادات الحساب"),
-            icon: <Settings className="w-4 h-4 mr-2" />,
-            link: `/${storeId}/account`,
-        },
+        // {
+        //     label: t("Account Settings", "إعدادات الحساب"),
+        //     icon: <Settings className="w-4 h-4 mr-2" />,
+        //     link: `/${storeId}/account`,
+        // },
         {
             label: t("Store Settings", "إعدادات المتجر"),
             icon: <Store className="w-4 h-4 mr-2" />,
