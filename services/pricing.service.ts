@@ -1,4 +1,4 @@
-import { GoldType, CurrencyType, Store } from "@/lib/generated/prisma/client";
+import { GoldType, CurrencyType, Store } from "@/lib/generated/prisma";
 import { CurrentPrices } from "@/lib/types";
 
 

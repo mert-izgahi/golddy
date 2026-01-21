@@ -25,7 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { StoreStatus } from "@/lib/generated/prisma/client";
+import { StoreStatus } from "@/lib/generated/prisma";
 
 interface CreateStoreFormProps {
     mode?: "create" | "edit";

@@ -1,6 +1,6 @@
 // lib/zod/stock.schemas.ts
 import { z } from "zod";
-import { GoldType, StockType } from "@/lib/generated/prisma/client";
+import { GoldType, StockType } from "@/lib/generated/prisma";
 
 // Base stock schema with all fields
 const baseStockSchema = z.object({

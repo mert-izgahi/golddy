@@ -1,5 +1,5 @@
 // lib/html-invoice-generator-simple.ts - SIMPLIFIED VERSION WITH LOGO
-import { Sale, Store } from "@/lib/generated/prisma/client";
+import { Sale, Store } from "@/lib/generated/prisma";
 
 interface InvoiceData {
     sale: Sale & { store: Store };
