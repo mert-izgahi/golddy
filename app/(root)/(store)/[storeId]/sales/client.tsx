@@ -2,7 +2,7 @@
 "use client";
 import { Button } from '@/components/ui/button';
 import { useLangStore } from '@/store/lang-store'
-import { Plus, Edit, Trash2, Printer, Download } from 'lucide-react';
+import { Plus, Edit, Trash2,  Download } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useGetSalesByStore, useDeleteSale } from '@/hooks/use-sales';
@@ -15,8 +15,6 @@ import { DataTable } from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Sale } from '@/lib/generated/prisma/client';
 import { formatCurrency, formatDate, getPaymentTypeLabel } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { generateInvoicePDF, printInvoicePDF } from '@/lib/pdf-generator';
 import { InvoiceDialog } from '@/components/invoice/invoice-dialog';
 
 interface Props {
