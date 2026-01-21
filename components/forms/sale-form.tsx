@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, AlertCircle, Calculator, DollarSign, Scale, CreditCard, User, FileText, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CurrencyType, GoldType, PaymentType, Store } from "@/lib/generated/prisma";
+import { CurrencyType, GoldType, PaymentType, Store } from "@/lib/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";

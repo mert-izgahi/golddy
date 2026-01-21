@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { ApiResponse } from '@/lib/types';
-import { Sale } from '@/lib/generated/prisma';
+import { Sale } from '@/lib/generated/prisma/client';
 
 export const useSaleInvoice = (saleId: string) => {
     return useQuery({

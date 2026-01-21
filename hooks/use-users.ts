@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { UserInput } from "@/lib/zod";
 import { apiClient } from "@/lib/api-client";
-import { User, Role } from "@/lib/generated/prisma";
+import { User, Role } from "@/lib/generated/prisma/client";
 import { ApiResponse, ApiResponseWithPagination, QueryParams } from "@/lib/types";
 
 interface GetUsersParams extends QueryParams {

@@ -1,6 +1,6 @@
 import AdminHeader from '@/components/layouts/admin-header';
 import { getAuthUser } from '@/lib/actions'
-import { Role } from '@/lib/generated/prisma';
+import { Role } from '@/lib/generated/prisma/client';
 import React from 'react'
 
 async function layout({ children }: { children: React.ReactNode }) {
